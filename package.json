@@ -1,0 +1,19 @@
+{
+    "name": "thisaislan.scriptables",
+    "version": "1.0.0",
+    "displayName": "Scriptables",
+    "description": "A powerful Unity package that enhances ScriptableObjects with runtime data management, editor debugging capabilities, and intuitive data separation between editor and runtime environments.",
+    "documentationUrl": "https://github.com/thisaislan/scriptables",
+    "changelogUrl": "https://github.com/thisaislan/scriptables/main/CHANGELOG.md",
+    "licensesUrl": "https://github.com/thisaislan/scriptables/blob/main/LICENSE.md",
+    "keywords": [
+        "Tools",
+        "Scriptables",
+        "Runtime",
+        "Editor",
+        "Debuggable"
+    ],
+    "category": "Tools",
+    "dependencies": {
+    }
+}
