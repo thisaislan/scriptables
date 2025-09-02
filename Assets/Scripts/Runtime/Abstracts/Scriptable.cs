@@ -3,6 +3,7 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using Thisaislan.Scriptables.Editor.Abstracts;
+using Thisaislan.Scriptables.Editor.Utilities;
 #endif
 
 namespace Thisaislan.Scriptables.Abstracts
@@ -34,24 +35,18 @@ namespace Thisaislan.Scriptables.Abstracts
         {
             get
             {
-#if UNITY_EDITOR
-                OnDataChange();
-#endif  
                 return data;
             }
             protected set
-            {
-#if UNITY_EDITOR
-                OnDataChange();
-#endif        
+            {  
                 data = value;
             }
         }
 
 #if UNITY_EDITOR
-        internal override void DataDebugPrint()
+        public override void PrintDataDebugEditor()
         {
-            Debug.Log(JsonUtility.ToJson(data, true));
+            Printer.PrintMessage($"{typeof(T).ToString().Replace("+","<")}>\n{GetStringData()}");
         }
 
         internal override string GetStringData()

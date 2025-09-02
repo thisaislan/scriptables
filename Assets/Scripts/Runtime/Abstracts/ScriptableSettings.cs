@@ -1,16 +1,12 @@
 using Thisaislan.Scriptables.Interfaces;
 using UnityEngine;
-using System.Reflection;
-
-using System;
-using UnityEditor;
-
-
-
 
 #if UNITY_EDITOR
 using Thisaislan.Scriptables.Editor.Utilities;
-using Thisaislan.Scriptables.Editor.Consts;
+using Thisaislan.Scriptables.Editor;
+using System.Reflection;
+using System;
+
 #endif
 
 namespace Thisaislan.Scriptables.Abstracts
@@ -19,14 +15,10 @@ namespace Thisaislan.Scriptables.Abstracts
     {
         [SerializeField]
 #if UNITY_EDITOR
-        [Tooltip(MetadataEditor.ScriptableSettings.EDITOR_DATA_TOOLTIP)]
+        [Tooltip(Consts.EDITOR_DATA_TOOLTIP)]
 #endif
         private T editorData;
-
-        // Add a runtime data instance that's separate from editor data
-        [System.NonSerialized]
-        private T runtimeData;
-
+        
         public override T Data
         {
             get
@@ -35,12 +27,13 @@ namespace Thisaislan.Scriptables.Abstracts
                 if (Application.isPlaying)
                 {
                     // Use runtime data during play mode
-                    if (runtimeData == null && editorData != null)
+                    if (base.Data == null && editorData != null)
                     {
                         // Create a copy of editor data for runtime
-                        runtimeData = ReflectionUtility.CreateCopy(editorData);
+                        base.Data = ReflectionUtility.CreateCopy(editorData);
                     }
-                    return runtimeData;
+
+                    return base.Data;
                 }
                 else
                 {
@@ -58,7 +51,7 @@ namespace Thisaislan.Scriptables.Abstracts
                 if (Application.isPlaying)
                 {
                     // Only set runtime data during play mode
-                    runtimeData = value;
+                    base.Data = value;
                 }
                 else
                 {
@@ -83,11 +76,11 @@ namespace Thisaislan.Scriptables.Abstracts
             // For ScriptableSettings, we want to clone the editor data
             if (editorData != null)
             {
-                runtimeData = CloneEditorData();
+                base.Data  = CloneEditorData();
             }
             else
             {
-                runtimeData = null;
+                base.Data  = null;
             }
         }
 
@@ -95,7 +88,7 @@ namespace Thisaislan.Scriptables.Abstracts
         {
             if (Application.isPlaying)
             {
-                return runtimeData;
+                return base.Data ;
             }
             else
             {
@@ -110,21 +103,6 @@ namespace Thisaislan.Scriptables.Abstracts
             {
                 ResetToDefaultState();
             }
-
-            SetIcon();
-        }
-
-        private void SetIcon()
-        {
-            Texture2D icon = Resources.Load<Texture2D>(MetadataEditor.ScriptableSettings.EDITOR_ICON_NAME);
-
-            if (icon == null)
-            {
-                Debug.LogWarning(MetadataEditor.ScriptableSettings.EDITOR_ICON_NOT_FOUND_MESSAGE);
-                icon = EditorGUIUtility.IconContent(MetadataEditor.Scriptable.EDITOR_DEFAULT_ICON_NAME).image as Texture2D;
-            }
-
-            EditorGUIUtility.SetIconForObject(this, icon);
         }
 
         private T CloneEditorData()
@@ -158,7 +136,7 @@ namespace Thisaislan.Scriptables.Abstracts
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to clone editor data: {e.Message}");
+                Debug.LogError($"{Consts.FAILED_TO_CLONE_EDITOR_DATA}: {e.Message}");
                 return null;
             }
         }

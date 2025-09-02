@@ -1,13 +1,6 @@
 using Thisaislan.Scriptables.Interfaces;
 using UnityEngine;
 using System;
-using Thisaislan.Scriptables.Editor.Consts;
-
-
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Thisaislan.Scriptables.Abstracts
 {
@@ -50,21 +43,6 @@ namespace Thisaislan.Scriptables.Abstracts
             {
                 ResetToDefaultState();
             }
-
-            SetIcon();
-        }
-
-        private void SetIcon()
-        {
-            Texture2D icon = Resources.Load<Texture2D>(MetadataEditor.ScriptableRuntime.EDITOR_ICON_NAME);
-
-            if (icon == null)
-            {
-                Debug.LogWarning(MetadataEditor.ScriptableRuntime.EDITOR_ICON_NOT_FOUND_MESSAGE);
-                icon = EditorGUIUtility.IconContent(MetadataEditor.Scriptable.EDITOR_DEFAULT_ICON_NAME).image as Texture2D;
-            }
-
-            EditorGUIUtility.SetIconForObject(this, icon);
         }
 #endif
     }

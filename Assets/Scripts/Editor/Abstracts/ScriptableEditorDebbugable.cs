@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using UnityEngine;
 
 namespace Thisaislan.Scriptables.Editor.Abstracts
@@ -14,17 +13,10 @@ namespace Thisaislan.Scriptables.Editor.Abstracts
             // Avoid external heritage
         }
 
-        internal event Action onDataChange;
-
-        internal abstract void DataDebugPrint();
+        public  abstract void PrintDataDebugEditor();
         internal abstract string GetStringData();
         internal abstract void ResetToDefaultState();
         internal abstract object GetDataObject();
-
-        internal void OnDataChange()
-        {
-            onDataChange?.Invoke();
-        }
     }
 }
 #endif
