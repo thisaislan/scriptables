@@ -1,15 +1,16 @@
 <p align="center">
   <a href="https://github.com/thisaislan/janus-scenes">
-    <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/scriptables_banner.png">
+    <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/scriptables_logo.png">
   </a>
 </p>
 
-
-<h1 align="center" style="text-align:center;">
-  Scriptables
+<h1 style="font-size: 50px" align ="center">
+  Scriptables  
+  <h4  align ="center">
+    A powerful Unity package that enhances ScriptableObjects with runtime data management, editor debugging capabilities, and intuitive data separation between editor and runtime environments.
+    <br>
+  </h4>
 </h1>
-
-A powerful Unity package that enhances ScriptableObjects with runtime data management, editor debugging capabilities, and intuitive data separation between editor and runtime environments.
 
 <p align="center">
     <a href="https://unity3d.com/get-unity/download">
@@ -18,16 +19,16 @@ A powerful Unity package that enhances ScriptableObjects with runtime data manag
         <img src="https://img.shields.io/badge/License-MIT-brightgreen.svg" alt="License MIT"></a>
     <a href="https://chat.deepseek.com">
         <img src="https://img.shields.io/badge/%F0%9F%92%AC-DeepSeek%20AI-blue" alt="License MIT"></a>
-    <a href="https://chatgpt.com/">
-        <img src="https://img.shields.io/badge/%F0%9F%92%AC-Chat%20GPT%20AI-black" alt="License MIT"></a>
 </p>
 
-</br>
+<h1></h1>
+
+
 </br>
 
 ### Table of Contents
 - [Features](#✨-features)
-- [Architecture Overview](#🏗️-architecture-overview)
+- [Overview](#🏗️-overview)
 - [Quick Start](#🚀-quick-start)
 - [Install](#📦-install)
 - [Support](#🤝-support)
@@ -41,98 +42,186 @@ A powerful Unity package that enhances ScriptableObjects with runtime data manag
 - **Dual Data System**: Separate editor data from runtime data with automatic reset functionality
 - **Runtime ScriptableObjects**: Data that automatically resets when exiting play mode
 - **Settings ScriptableObjects**: Preserve editor data while allowing runtime modifications
+- **Reactive ScriptableObjects**: Preserve editor data while allowing other classes to add observer to value changes
 - **Advanced Editor Integration**: Custom inspector with real-time data visualization
 - **Type-Safe Data Management**: Generic implementation supporting any serializable data type
-- **Reflection-Based UI**: Automatically generates editor UI for your data structures
+- **Reflection-Based UI**: Automatically generates editor UI for the data structures (Editor mode)
 - **Reset Management**: Automatic data cleanup when entering/exiting play mode
+- **Scriptable Panel**: Panel to help organize all scriptableObjects in the project (Tools/Scriptable/Panel)
 
 </br>
 
-## 🏗️ Architecture Overview
+## 🏗️ Overview
 
-The package follows a clean ScriptableObject architecture by dividing them into two specialized types:
+The package follows a clean ScriptableObject architecture by dividing them into three specialized types:
 
-### ⚙️ Settings ScriptableObjects
+### ⚙️ Scriptable Settings
 - **Fixed data** configured to be used when the game runs
 - Can be updated via remote config, repositories, or any external means
 - Persistent data that maintains editor-configured values
 - Ideal for game configuration, constants, and setup parameters
 
-### 🔄 Runtime ScriptableObjects  
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+### 🔄 Scriptable Runtime
 - **Temporary data** shared across different systems in the project
 - Volatile data that resets automatically
 - Perfect for game state, temporary variables, and system communication
 - No persistence - reset to defaults on every run
 
-## 🚀 Quick Start
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
 
-### Creating Settings ScriptableObjects
+
+### 🔥Scriptable Reactive
+- **Observable data** that notifies listeners automatically when values change
+- Editor/Runtime separation maintains different values for edit mode vs. play mode
+- Event-driven architecture allows decoupled communication between systems
+- Automatic persistence preserves editor-configured values while allowing runtime modifications
+
+</br>
+
+## 🚀 Quick Start 
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+### Creating Scriptable Settings
 
 ```csharp
-[CreateAssetMenu(fileName = "RateScriptableRuntime", menuName = "Exploding Ghosts/Scriptable/Runtime/Rate")]
-public class RateScriptableRuntime : ScriptableRuntime<RateScriptableRuntime.RateData>
+[CreateAssetMenu(fileName = "BarScriptableSettings", menuName = "Bar/Settings")]
+public class BarScriptableSettings : ScriptableSettings<BarScriptableSettings.BarData>
 {
     [Serializable]
-    public class RateData: Data
+    public class BarData : Data
     {
-        public int UpLeftSpawnerRate;
-        public int UpRightSpawnerRate;
-        public int DownLeftSpawnerRate;
-        public int DownRightSpawnerRate;
+        public string Foo;
     }
 }
 ```
 
-```csharp
-[CreateAssetMenu(fileName = "BoundariesScriptableSettings", menuName = "Exploding Ghosts/Scriptable/Settings/Boundaries")]
-public class BoundariesScriptableSettings : ScriptableSettings<BoundariesScriptableSettings.BoundariesData>
-{
-    [Serializable]
-    public class BoundariesData : Data
-    {
-        public float MinXPosition;
-        public float MaxXPosition;
-        public float MinZPosition;
-        public float MaxZPosition;
-    }
-}
-```
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
 
-### 👀 Visual Examples
+When a new instance is created of these ScriptableObjects in the Inspector, they appear with a clean, organized interface:
 
-When you create instances of these ScriptableObjects in the Inspector, they appear with a clean, organized interface:
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
 
 <div align="center" style="text-align:center;">
-
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/runtime.png"  width="500" > 
-
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/settings.png"  width="500" > 
   <br>
-
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/settings.png" width="500" > 
-  
 </div>
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+And in play mode:
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/settings_play_mode.png"  width="500" > 
+  <br>
+</div>
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
 
 The editor provides:
 
-    Clear separation between Settings and Runtime data types
+    Clear separation between Settings and Runtime data
 
     Intuitive interface for configuring default values
 
     Visual indicators for data type and purpose
 
-### 🙊 Runtime View
+    Method to initialize data when necessary
 
-During gameplay, the data management becomes interactive:
+    Method to print data (Editor only)
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+### Creating Scriptable Runtime
+
+```csharp
+[CreateAssetMenu(fileName = "FooScriptableRuntime", menuName = "Foo/Runtime")]
+public class FooScriptableRuntime : ScriptableRuntime<FooScriptableRuntime.FooData>
+{
+    [Serializable]
+    public class FooData : Data
+    {
+        public int Bar;
+    }
+}
+```
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+Instance:
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
 
 <div align="center" style="text-align:center;">
-
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/runtime_play_mode.png" width="500" > 
-
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/runtime.png"  width="500" > 
   <br>
 
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/settings_play_mode.png" width="500" > 
-  
 </div>
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+Play mode:
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/runtime_play_mode.png"  width="500" > 
+  <br>
+</div>
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+As ScriptableSettings the runtime data can be changed freely during gameplay without any persistence concerns. The system automatically handles:
+
+    Automatic Reset: Runtime data resets to default values on every run in the Unity Editor
+
+    Zero Persistence: Changes made during runtime are never saved automatically
+
+    Isolated Modifications: Runtime changes don't affect the original editor-configured values
+
+    Clean State: Every play session starts with fresh, default data
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
 
 Runtime features include:
 
@@ -144,17 +233,114 @@ Runtime features include:
 
     Clean display of current runtime values
 
-🔄 Runtime Behavior
+    Method to reset data when necessary
+    
+    Method to print data (Editor only)
 
-The runtime data can be changed freely during gameplay without any persistence concerns. The system automatically handles:
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
 
-    Automatic Reset: Runtime data resets to default values on every run in the Unity Editor
+### Creating Scriptable Reactive
 
-    Zero Persistence: Changes made during runtime are never saved automatically
+Scriptable Reactives are observable data containers that automatically notify listeners when their values change, enabling reactive programming patterns throughout on the project.
 
-    Isolated Modifications: Runtime changes don't affect the original editor-configured values
 
-    Clean State: Every play session starts with fresh, default data
+It is possible to create Scriptable Reactives using the asset menu by right-clicking and selecting:
+Create > Scriptables > Reactives
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+The following pre-made types are available:
+
+  - BooleanScriptableReactive
+  - ColorScriptableReactive
+  - DoubleScriptableReactive
+  - FloatScriptableReactive
+  - GameObjectScriptableReactive
+  - IntScriptableReactive
+  - NoParametersScriptableReactive
+  - QuaternionScriptableReactive
+  - StringScriptableReactive
+  - TransformScriptableReactive
+  - Vector2ScriptableReactive
+  - Vector3ScriptableReactive
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+When a instances of these ScriptableObjects is created in the Inspector (Vector2 type):
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/reactive.png"  width="500" > 
+  <br>
+</div>
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+In play mode:
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/reactive_play_mode.png"  width="500" > 
+  <br>
+</div>
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+  It is possible to extend the ScriptableReactive class to create custom reactive types:
+
+```csharp
+[CreateAssetMenu(fileName = "FooBarScriptableReactive", menuName = "FooBar/Reactive")]
+public class FooBarScriptableReactive : ScriptableReactive<FooBarScriptableReactive>
+{
+    // Methods here if needed
+}
+```
+
+> Note: Not all types are serializable by default or will be visible in the editor. Ensure the custom type is marked as [System.Serializable] if it's a custom class.
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+Like ScriptableSettings, Scriptable Reactives handle runtime data intelligently:
+
+    Automatic Reset: Runtime values reset to editor-configured defaults on every play session
+
+    Zero Persistence: Runtime modifications are never automatically saved
+
+    Isolated Modifications: Editor values remain untouched during gameplay
+
+    Clean State: Each play session starts with fresh, predictable data
+
+<h5 style="font-size: 1px" align ="center">
+    <br>
+</h5>
+
+
+Features include:
+
+    Method to reset data (When possible)
+    
+    Method to print data (Editor only)
+
+    Methods to ensure observability of the data
 
 </br>
 
@@ -208,7 +394,10 @@ Copyright (c) 2024-present Aislan Tavares (@thisaislan) and Contributors. Script
 <br>
 
 <h4 align="center" style="text-align:center;">
+  <a href="https://github.com/thisaislan/scriptables">
+    <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/scriptables_all.png" style="width: 100px">    
+  </a>
 
-Enjoy! :heart:
+  Enjoy! ♥️
 </h4>
 <br>

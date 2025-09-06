@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: e6d03999ef9ed8f45ad7729159870c88
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_ViewDataDictionary: {instanceID: 0}
+  - iconTab1: {instanceID: 0}
+  - iconTab2: {fileID: 2800000, guid: a78a6b10b66cbfa4a901e45a8241237e, type: 3}
+  - iconTab3: {fileID: 2800000, guid: 5b10c0e4af7cfc8479e90a98e218a36e, type: 3}
+  - iconTab4: {fileID: 2800000, guid: 280573ea3ef221e40b36db30c8e7cea7, type: 3}
+  - iconTab5: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

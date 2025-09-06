@@ -6,3 +6,7 @@
 #### v1.0.1:
 - Fix cyclic references
 - Fix Scriptable Settings Print
+
+#### v1.2.0:
+- Add ScriptableReavtive
+- Add Scriptable Panel
