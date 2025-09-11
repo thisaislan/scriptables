@@ -61,8 +61,9 @@ namespace Thisaislan.Scriptables.Editor
         internal const string TabAllIcon = "tab_all";
         internal const string AssetColumnHeader = "    Asset";
         internal const string PathColumnHeader = "Path";
-        internal const string ActionsColumnHeader = "Actions";
+        internal const string ActionsColumnHeader = "  Actions";
         internal const string RenameButtonLabel = "Rename";
+        internal const string SearchButtonLabel = "Search";
         internal const string ReactiveVariableName = "Value";
         internal const string DeleteButtonLabel = "Delete";
         internal const string CancelButtonLabel = "Cancel";

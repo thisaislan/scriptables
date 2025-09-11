@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
+using UnityEditor.Search;
 
 namespace Thisaislan.Scriptables.Editor
 {
@@ -18,14 +19,15 @@ namespace Thisaislan.Scriptables.Editor
         private enum Tab { Debuggable, Settings, Runtime, Reactive, All }
         
         // Window configuration
-        private const float MinWindowWidth = 600f;
-        private const float MinWindowHeight = 400f;
-        private const float AssetColumnWidth = 250f;
-        private const float ActionsColumnWidth = 134f;
+        private const float MinWindowWidth = 900f;
+        private const float MinWindowHeight = 500f;
+        private const float AssetColumnWidth = 300f;
+        private const float ActionsColumnWidth = 186f;
         private const float ButtonWidth = 55f;
         private const float TabHeight = 30f;
         private const float HeaderHeight = 20f;
         private const float IconSize = 20f;
+        private const float MinPathWidth = 100f;
         private Tab currentTab = Tab.Debuggable;
         private Vector2 scrollPos;
         private GUIContent[] tabContents;
@@ -124,7 +126,7 @@ namespace Thisaislan.Scriptables.Editor
                 
             }
         }
-        
+
         /// <summary>
         /// Renders the column headers (fixed position, not scrollable)
         /// </summary>
@@ -136,14 +138,12 @@ namespace Thisaislan.Scriptables.Editor
             GUILayout.Label(Consts.ActionsColumnHeader, EditorStyles.boldLabel, GUILayout.Width(ActionsColumnWidth));
             EditorGUILayout.EndHorizontal();
         }
-        
+
         /// <summary>
         /// Renders the scrollable list of assets
         /// </summary>
         private void RenderAssetList()
         {
-            float availablePathWidth = position.width - 400; // 400px for other columns
-
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos, true, true);
 
             List<Object> assets = GetAssetsForCurrentTab()
@@ -159,7 +159,7 @@ namespace Thisaislan.Scriptables.Editor
             {
                 foreach (var asset in assets)
                 {
-                    RenderAssetRow(asset, availablePathWidth);
+                    RenderAssetRow(asset);
                 }
             }
 
@@ -170,8 +170,7 @@ namespace Thisaislan.Scriptables.Editor
         /// Renders a single asset row with icon, name, path, and action buttons
         /// </summary>
         /// <param name="asset">The asset to render</param>
-        /// <param name="availablePathWidth">Available width for the path column</param>
-        private void RenderAssetRow(Object asset, float availablePathWidth)
+        private void RenderAssetRow(Object asset)
         {
             string path = AssetDatabase.GetAssetPath(asset);
             Rect rowRect = EditorGUILayout.BeginHorizontal();
@@ -180,8 +179,11 @@ namespace Thisaislan.Scriptables.Editor
             if (Selection.activeObject == asset)
                 EditorGUI.DrawRect(rowRect, new Color(0.24f, 0.48f, 0.90f, 0.3f));
 
-            RenderAssetNameAndIcon(asset, path);
-            RenderAssetPath(path, availablePathWidth);
+            // Calculate available width for path
+            float availableWidth = position.width - AssetColumnWidth - ActionsColumnWidth - 30;
+            
+            RenderAssetNameAndIcon(asset, path, Mathf.Min(AssetColumnWidth, position.width * 0.5f));
+            RenderAssetPath(path, Mathf.Max(MinPathWidth, availableWidth));
             RenderActionButtons(asset, path);
 
             EditorGUILayout.EndHorizontal();
@@ -194,9 +196,10 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         /// <param name="asset">The asset being rendered</param>
         /// <param name="path">Path to the asset</param>
-        private void RenderAssetNameAndIcon(Object asset, string path)
+        /// <param name="maxWidth">Maximum width for the asset name</param>
+        private void RenderAssetNameAndIcon(Object asset, string path, float maxWidth)
         {
-            EditorGUILayout.BeginHorizontal(GUILayout.Width(AssetColumnWidth));
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(maxWidth));
             GUILayout.Space(10);
             GUILayout.Label(AssetPreview.GetMiniThumbnail(asset), GUILayout.Width(IconSize), GUILayout.Height(IconSize));
 
@@ -218,7 +221,9 @@ namespace Thisaislan.Scriptables.Editor
             }
             else
             {
-                GUILayout.Label(asset.name, GUILayout.ExpandWidth(true));
+                // Shorten the asset name if it's too long
+                string displayName = ShortenName(asset.name, maxWidth - IconSize - 20);
+                GUILayout.Label(displayName, GUILayout.ExpandWidth(true));
             }
             EditorGUILayout.EndHorizontal();
         }
@@ -231,24 +236,32 @@ namespace Thisaislan.Scriptables.Editor
         private void RenderAssetPath(string path, float availableWidth)
         {
             string displayPath = ShortenPath(path, availableWidth);
-            GUILayout.Label(new GUIContent(displayPath, path), GUILayout.ExpandWidth(true));
+            GUILayout.Label(new GUIContent(displayPath, path), 
+                           GUILayout.ExpandWidth(true), 
+                           GUILayout.MinWidth(MinPathWidth));
         }
         
         /// <summary>
-        /// Renders the action buttons (Rename, Delete)
+        /// Renders the action buttons (Search, Rename, Delete)
         /// </summary>
         /// <param name="asset">The asset the buttons will act upon</param>
         /// <param name="path">Path to the asset</param>
         private void RenderActionButtons(Object asset, string path)
         {
-            EditorGUILayout.BeginHorizontal(GUILayout.Width(120));
-            bool clickedRename = GUILayout.Button(Consts.RenameButtonLabel, GUILayout.Width(ButtonWidth));
-            bool clickedDelete = GUILayout.Button(Consts.DeleteButtonLabel, GUILayout.Width(ButtonWidth));
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(ActionsColumnWidth));
             
-            GUILayout.Space(20);
+            // Ensure buttons have a fixed width and don't get squeezed
+            bool clickedSearch = GUILayout.Button(Consts.SearchButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
+            bool clickedRename = GUILayout.Button(Consts.RenameButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
+            bool clickedDelete = GUILayout.Button(Consts.DeleteButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
+            
             EditorGUILayout.EndHorizontal();
 
-            if (clickedRename)
+            if (clickedSearch)
+            {
+                FindReferencesInScene(asset, path);
+            }
+            else if (clickedRename)
             {
                 StartRenaming(asset);
             }
@@ -256,6 +269,88 @@ namespace Thisaislan.Scriptables.Editor
             {
                 HandleDeleteAction(asset, path);
             }
+        }
+        
+        /// <summary>
+        /// Shortens a name with ellipsis at the end to fit available width
+        /// </summary>
+        /// <param name="name">The full name to shorten</param>
+        /// <param name="availableWidth">Available width for display</param>
+        /// <returns>The shortened name with ellipsis</returns>
+        private string ShortenName(string name, float availableWidth)
+        {
+            if (string.IsNullOrEmpty(name)) return name;
+
+            // Calculate if the full name fits
+            float fullWidth = GUI.skin.label.CalcSize(new GUIContent(name)).x;
+            if (fullWidth <= availableWidth) return name;
+
+            // Start with the full name and gradually shorten from the end
+            string shortened = name;
+            int removeCount = 1;
+
+            while (removeCount < shortened.Length)
+            {
+                // Remove characters from the end and add ellipsis
+                string testString = shortened.Substring(0, shortened.Length - removeCount) + "...";
+                float testWidth = GUI.skin.label.CalcSize(new GUIContent(testString)).x;
+
+                if (testWidth <= availableWidth)
+                {
+                    return testString;
+                }
+
+                removeCount++;
+
+                // If we've removed too much, just return ellipsis
+                if (removeCount > shortened.Length - 3)
+                {
+                    return "...";
+                }
+            }
+
+            return shortened;
+        }
+        
+        /// <summary>
+        /// Shortens a path with ellipsis at the end to fit available width
+        /// </summary>
+        /// <param name="path">The full path to shorten</param>
+        /// <param name="availableWidth">Available width for display</param>
+        /// <returns>The shortened path with ellipsis</returns>
+        private string ShortenPath(string path, float availableWidth)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+
+            // Calculate if the full path fits
+            float fullWidth = GUI.skin.label.CalcSize(new GUIContent(path)).x;
+            if (fullWidth <= availableWidth) return path;
+
+            // Start with the full path and gradually shorten from the end
+            string shortened = path;
+            int removeCount = 1;
+
+            while (removeCount < shortened.Length)
+            {
+                // Remove characters from the end and add ellipsis
+                string testString = shortened.Substring(0, shortened.Length - removeCount) + "...";
+                float testWidth = GUI.skin.label.CalcSize(new GUIContent(testString)).x;
+
+                if (testWidth <= availableWidth)
+                {
+                    return testString;
+                }
+
+                removeCount++;
+
+                // If we've removed too much, just return ellipsis
+                if (removeCount > shortened.Length - 3)
+                {
+                    return "...";
+                }
+            }
+
+            return shortened;
         }
         
         /// <summary>
@@ -287,6 +382,19 @@ namespace Thisaislan.Scriptables.Editor
             assetBeingRenamed = asset;
             newName = asset.name;
             isRenaming = true;
+        }
+
+        /// <summary>
+        /// Finds all references to an asset in the current scene using Unity's Search window
+        /// </summary>
+        /// <param name="asset">The asset to find references for</param>
+        private void FindReferencesInScene(Object asset, string path)
+        {
+            string searchQuery = $"ref:\"{path}\"";
+
+            // Create search context and open window for scene references
+            var context = SearchService.CreateContext(searchQuery);
+            SearchService.ShowWindow(context);
         }
         
         /// <summary>
@@ -342,47 +450,6 @@ namespace Thisaislan.Scriptables.Editor
         }
         
         /// <summary>
-        /// Shortens a path with ellipsis at the end to fit available width
-        /// </summary>
-        /// <param name="path">The full path to shorten</param>
-        /// <param name="availableWidth">Available width for display</param>
-        /// <returns>The shortened path with ellipsis</returns>
-        private string ShortenPath(string path, float availableWidth)
-        {
-            if (string.IsNullOrEmpty(path)) return path;
-
-            // Calculate if the full path fits
-            float fullWidth = GUI.skin.label.CalcSize(new GUIContent(path)).x;
-            if (fullWidth <= availableWidth) return path;
-
-            // Start with the full path and gradually shorten from the end
-            string shortened = path;
-            int removeCount = 1;
-
-            while (removeCount < shortened.Length)
-            {
-                // Remove characters from the end and add ellipsis
-                string testString = shortened.Substring(0, shortened.Length - removeCount) + "...";
-                float testWidth = GUI.skin.label.CalcSize(new GUIContent(testString)).x;
-
-                if (testWidth <= availableWidth)
-                {
-                    return testString;
-                }
-
-                removeCount++;
-
-                // If we've removed too much, just return ellipsis
-                if (removeCount > shortened.Length - 3)
-                {
-                    return "...";
-                }
-            }
-
-            return shortened;
-        }
-        
-        /// <summary>
         /// Retrieves assets based on the currently selected tab
         /// </summary>
         /// <returns>List of assets filtered by the current tab</returns>
@@ -403,16 +470,40 @@ namespace Thisaislan.Scriptables.Editor
             };
 
             var list = new List<Object>();
+            
             foreach (string filter in filters)
             {
                 foreach (string guid in AssetDatabase.FindAssets(filter))
                 {
-                    var asset = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(guid));
-                    if (asset != null && !list.Contains(asset))
-                        list.Add(asset);
+                    string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                    Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
+
+                    // Filter out non-ScriptableObject assets
+                    if (asset != null && asset is ScriptableObject && !list.Contains(asset))
+                    {
+                        // Additional filtering to exclude specific file types
+                        if (ShouldIncludeAsset(assetPath))
+                        {
+                            list.Add(asset);
+                        }
+                    }
                 }
             }
             return list;
+        }
+
+        /// <summary>
+        /// Determines if an asset should be included based on its file extension
+        /// </summary>
+        /// <param name="assetPath">Path to the asset</param>
+        /// <returns>True if the asset should be included, false otherwise</returns>
+        private bool ShouldIncludeAsset(string assetPath)
+        {       
+            // Get the file extension
+            string extension = System.IO.Path.GetExtension(assetPath).ToLower();
+            
+            // Exclude if it's in our exclusion list
+            return extension.Equals(".asset");
         }
         
         /// <summary>
