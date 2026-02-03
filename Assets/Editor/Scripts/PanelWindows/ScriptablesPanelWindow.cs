@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEditor.Search;
 
-namespace Thisaislan.Scriptables.Editor
+namespace Thisaislan.Scriptables.Editor.PanelWidows
 {
     /// <summary>
     /// Editor window for managing and organizing ScriptableObjects in the project

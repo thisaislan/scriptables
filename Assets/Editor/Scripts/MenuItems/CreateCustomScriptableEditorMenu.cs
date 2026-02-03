@@ -1,7 +1,7 @@
 using UnityEditor;
 using System.IO;
 
-namespace Thisaislan.Scriptables.Editor
+namespace Thisaislan.Scriptables.Editor.MenuItems
 {
     public static class CreateCustomScriptableEditorMenu
     {
