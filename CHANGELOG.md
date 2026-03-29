@@ -1,5 +1,11 @@
 # Changelog
 
+#### v1.5.0:
+- Add observer list on inspector
+- Add basic runtimes an settings scriptables
+- Improve performance of reaction on scriptable reactive
+- Minor improvements
+
 #### v1.4.1:
 - Fix menu item folder structure
 

@@ -1,10 +1,11 @@
 using UnityEngine;
-using UnityEngine.Events;
+using System;
+
 
 #if UNITY_EDITOR
 using Thisaislan.Scriptables.Editor.Abstracts;
 using Thisaislan.Scriptables.Editor;
-using System;
+using UnityEditor;
 #endif
 
 namespace Thisaislan.Scriptables.Abstracts
@@ -29,7 +30,7 @@ namespace Thisaislan.Scriptables.Abstracts
 #endif
     {
         [SerializeField]
-        private UnityEvent<T> evt;
+        private Action<T> action;
 
         [SerializeField]
 #if UNITY_EDITOR
@@ -77,7 +78,7 @@ namespace Thisaislan.Scriptables.Abstracts
                 return editorValue;
 #endif
             }
-            set
+            protected set
             {
                 SetWithoutNotify(value);
                 Notify(value);
@@ -108,7 +109,7 @@ namespace Thisaislan.Scriptables.Abstracts
         /// Set value with notification
         /// </summary>
         /// <param name="value">New value to be set</param>
-        public void Set(T value)
+        public void SetValue(T value)
         {
             Value = value;
         }
@@ -127,18 +128,26 @@ namespace Thisaislan.Scriptables.Abstracts
         /// }
         /// </code>
         /// </example>
-        public void AddObserver(UnityAction<T> call)
+        public void AddObserver(Action<T> call)
         {
-            evt.AddListener(call);
+            action += call;
+            
+#if UNITY_EDITOR
+            RepaintReactiveEditorForObject(this);
+#endif
         }
 
         /// <summary>
         /// Unregisters a callback from value change notifications
         /// </summary>
         /// <param name="call">The method to remove from notifications</param>
-        public void RemoveObserver(UnityAction<T> call)
+        public void RemoveObserver(Action<T> call)
         {
-            evt.RemoveListener(call);
+            action -= call;
+
+#if UNITY_EDITOR
+            RepaintReactiveEditorForObject(this);
+#endif
         }
 
         /// <summary>
@@ -151,7 +160,14 @@ namespace Thisaislan.Scriptables.Abstracts
         /// </remarks>
         public void Notify(T value)
         {
-            evt.Invoke(value);
+#if UNITY_EDITOR
+            if (action == null || action?.GetInvocationList().Length == 0)
+            {
+                Debug.LogWarning(string.Format(Meta.NoListenersEditorMessage, name));
+                return;
+            }
+#endif
+            action?.Invoke(value);
         }
 
 #if UNITY_EDITOR
@@ -225,6 +241,33 @@ namespace Thisaislan.Scriptables.Abstracts
         internal override void NotifyValue()
         {
             Notify(Value);
+        }
+
+        /// <summary>
+        /// Finds and repaints the editor inspector for a specific <see cref="ScriptableReactive{T}"/> object.
+        /// Ensures that any changes to the reactive object (e.g., new observers, updated values) are immediately
+        /// reflected in the editor GUI without requiring manual interaction.
+        /// </summary>
+        /// <param name="scriptable">
+        /// The <see cref="ScriptableReactive{T}"/> instance whose editor should be repainted.
+        /// </param>
+        internal void RepaintReactiveEditorForObject(UnityEngine.Object targetObject)
+        {
+            if (targetObject == null) return;
+
+            // Get all active editors in the project windows
+            foreach (UnityEditor.Editor editor in ActiveEditorTracker.sharedTracker.activeEditors)
+            {
+                // Check if this editor is for the object we want
+                if (editor.target == targetObject)
+                {
+                    // Ensure the editor is a ScriptableReactiveEditorDebbugableBaseEditor
+                    if (editor is ScriptableReactiveEditorDebbugableBaseEditor)
+                    {
+                        editor.Repaint();
+                    }
+                }
+            }
         }
 #endif
     }

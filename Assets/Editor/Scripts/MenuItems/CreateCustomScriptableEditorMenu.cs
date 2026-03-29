@@ -5,79 +5,76 @@ namespace Thisaislan.Scriptables.Editor.MenuItems
 {
     public static class CreateCustomScriptableEditorMenu
     {
-        /* =========================================================
-        * CONSTANTS
-        * ========================================================= */
-
         // Root menu
-        private const string ROOT_MENU_PATH = "Assets/Create/Scripting/Custom Scriptable/";
-        private const int ROOT_MENU_ORDER = 20;
+        private const string RootMenuPath = "Assets/Create/Scripting/Custom Scriptable/";
+        private const int RootMenuOrder = 20;
 
         // Menu names
-        private const string SETTINGS_MENU_NAME = "Settings";
-        private const string RUNTIME_MENU_NAME  = "Runtime";
-        private const string REACTIVE_MENU_NAME = "Reactive";
+        private const string SettingsMenuName = "Settings";
+        private const string RuntimeMenuName = "Runtime";
+        private const string ReactiveMenuName = "Reactive";
 
         // Suffixes
-        private const string SETTINGS_SUFFIX = "ScriptableSettings";
-        private const string RUNTIME_SUFFIX  = "ScriptableRuntime";
-        private const string DATA_SUFFIX     = "Data";
+        private const string SettingsSuffix = "ScriptableSettings";
+        private const string RuntimeSuffix = "ScriptableRuntime";
+        private const string DataSuffix = "Data";
 
         // Save dialog
-        private const string SAVE_EXTENSION = "cs";
+        private const string SaveExtension = "cs";
 
         // Asset menu roots
-        private const string SETTINGS_ASSET_MENU_ROOT = "Custom Scriptables/Settings/";
-        private const string RUNTIME_ASSET_MENU_ROOT  = "Custom Scriptables/Runtime/";
-        private const string REACTIVE_ASSET_MENU_ROOT = "Custom Scriptables/Reactive/";
-        private const int ASSET_MENU_ROOT_ORDER = 10;
+        private const string SettingsAssetMenuRoot = "Custom Scriptables/Settings/";
+        private const string RuntimeAssetMenuRoot = "Custom Scriptables/Runtime/";
+        private const string ReactiveAssetMenuRoot = "Custom Scriptables/Reactive/";
+        private const int AssetMenuRootOrder = 10;
 
+        // Dialog constants
+        private const string CreateSettingsTitle = "Create Scriptable Settings";
+        private const string CreateRuntimeTitle = "Create Scriptable Runtime";
+        private const string CreateReactiveTitle = "Create Scriptable Reactive";
+        private const string DefaultSettingsName = "ScriptableSettings";
+        private const string DefaultRuntimeName = "ScriptableRuntime";
+        private const string DefaultReactiveName = "ScriptableReactive";
+        private const string CreateSettingsMessage = "Enter name for the new scriptable settings";
+        private const string CreateRuntimeMessage = "Enter name for the new scriptable runtime";
+        private const string CreateReactiveMessage = "Enter name for the new scriptable reactive";
+        private const string FolderCreationDefaultPath = "Assets";
+        private const string ScriptableRuntimeType = "ScriptableRuntime";
+        private const string ScriptableSettingsType = "ScriptableSettings";
 
-        /* =========================================================
-        * MENU ENTRIES
-        * ========================================================= */
-
-        [MenuItem(ROOT_MENU_PATH + SETTINGS_MENU_NAME, false, ROOT_MENU_ORDER)]
+        [MenuItem(RootMenuPath + SettingsMenuName, false, RootMenuOrder)]
         public static void CreateSettings()
         {
             CreateWithDialog(
-                title: "Create Scriptable Settings",
-                defaultName: "ScriptableSettings",
-                message: "Enter name for the new scriptable settings",
+                title: CreateSettingsTitle,
+                defaultName: DefaultSettingsName,
+                message: CreateSettingsMessage,
                 creator: CreateSettingsScript
             );
         }
 
-        [MenuItem(ROOT_MENU_PATH + RUNTIME_MENU_NAME, false, ROOT_MENU_ORDER)]
+        [MenuItem(RootMenuPath + RuntimeMenuName, false, RootMenuOrder)]
         public static void CreateRuntime()
         {
             CreateWithDialog(
-                title: "Create Scriptable Runtime",
-                defaultName: "ScriptableRuntime",
-                message: "Enter name for the new scriptable runtime",
+                title: CreateRuntimeTitle,
+                defaultName: DefaultRuntimeName,
+                message: CreateRuntimeMessage,
                 creator: CreateRuntimeScript
             );
         }
 
-        [MenuItem(ROOT_MENU_PATH + REACTIVE_MENU_NAME, false, ROOT_MENU_ORDER)]
+        [MenuItem(RootMenuPath + ReactiveMenuName, false, RootMenuOrder)]
         public static void CreateReactive()
         {
             CreateWithDialog(
-                title: "Create Scriptable Reactive",
-                defaultName: "ScriptableReactive",
-                message: "Enter name for the new scriptable reactive",
+                title: CreateReactiveTitle,
+                defaultName: DefaultReactiveName,
+                message: CreateReactiveMessage,
                 creator: CreateReactiveScript
             );
         }
 
-
-        /* =========================================================
-        * DIALOG + DISPATCH
-        * ========================================================= */
-
-        /// <summary>
-        /// Shows a save dialog and delegates creation logic.
-        /// </summary>
         private static void CreateWithDialog(
             string title,
             string defaultName,
@@ -90,7 +87,7 @@ namespace Thisaislan.Scriptables.Editor.MenuItems
             string path = EditorUtility.SaveFilePanelInProject(
                 title,
                 defaultName,
-                SAVE_EXTENSION,
+                SaveExtension,
                 message,
                 folder
             );
@@ -101,15 +98,6 @@ namespace Thisaislan.Scriptables.Editor.MenuItems
             creator(path);
         }
 
-
-        /* =========================================================
-        * CREATION LOGIC
-        * ========================================================= */
-
-        /// <summary>
-        /// Shared creator for Scriptables that have a nested Data class
-        /// (Settings & Runtime).
-        /// </summary>
         private static void CreateDataScriptable(
             string path,
             string suffixToStrip,
@@ -130,13 +118,15 @@ namespace Thisaislan.Scriptables.Editor.MenuItems
 using Thisaislan.Scriptables.Abstracts;
 using System;
 
-[CreateAssetMenu(fileName = ""{className}"", menuName = ""{assetMenuRoot}{className}"", order = {ASSET_MENU_ROOT_ORDER})]
+[CreateAssetMenu(fileName = nameof({className}), menuName = ""{assetMenuRoot}"" + nameof({className}), order = {AssetMenuRootOrder})]
 public class {className} : {baseType}<{className}.{dataName}>
 {{
+    // 🎮 Here is a nice place to put your methods
+
     [Serializable]
     public class {dataName} : Data
     {{
-        // Your properties go here
+        // 📝 Add your serialized fields here
     }}
 }}
 ";
@@ -144,35 +134,26 @@ public class {className} : {baseType}<{className}.{dataName}>
             WriteAndSelectFile(path, content);
         }
 
-        /// <summary>
-        /// Creates a ScriptableSettings script.
-        /// </summary>
         private static void CreateSettingsScript(string path)
         {
             CreateDataScriptable(
                 path,
-                SETTINGS_SUFFIX,
-                "ScriptableSettings",
-                SETTINGS_ASSET_MENU_ROOT
+                SettingsSuffix,
+                ScriptableSettingsType,
+                SettingsAssetMenuRoot
             );
         }
 
-        /// <summary>
-        /// Creates a ScriptableRuntime script.
-        /// </summary>
         private static void CreateRuntimeScript(string path)
         {
             CreateDataScriptable(
                 path,
-                RUNTIME_SUFFIX,
-                "ScriptableRuntime",
-                RUNTIME_ASSET_MENU_ROOT
+                RuntimeSuffix,
+                ScriptableRuntimeType,
+                RuntimeAssetMenuRoot
             );
         }
 
-        /// <summary>
-        /// Creates a ScriptableReactive script (self-referenced generic).
-        /// </summary>
         private static void CreateReactiveScript(string path)
         {
             string className = Path.GetFileNameWithoutExtension(path);
@@ -180,33 +161,75 @@ public class {className} : {baseType}<{className}.{dataName}>
             string content = $@"using UnityEngine;
 using Thisaislan.Scriptables.Abstracts;
 
-[CreateAssetMenu(fileName = ""{className}"", menuName = ""{REACTIVE_ASSET_MENU_ROOT}{className}"", order = {ASSET_MENU_ROOT_ORDER})]
+[CreateAssetMenu(fileName = nameof({className}), menuName = ""{ReactiveAssetMenuRoot}"" + nameof({className}), order = {AssetMenuRootOrder})]
 public class {className} : ScriptableReactive<{className}>
 {{
-    // Methods here if needed
+    // ⚠️ IMPORTANT: Replace <ScriptableReactive> with the actual class
+    // 📦 Add methods, enums, or nested classes here if needed
 }}
 ";
 
             WriteAndSelectFile(path, content);
         }
 
-
-        /* =========================================================
-        * HELPERS
-        * ========================================================= */
-
-        /// <summary>
-        /// Returns the currently selected folder or Assets.
-        /// </summary>
         private static string GetSelectedFolder()
         {
-            string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-            return string.IsNullOrEmpty(path) ? "Assets" : path;
+            string result = GetFolderFromSelection();
+
+            if (!string.IsNullOrEmpty(result))
+            {
+                return result;
+            }
+            
+            result = GetFolderFromProjectWindow();
+            
+            if (!string.IsNullOrEmpty(result))
+            {
+                return result;
+            }
+            
+            return FolderCreationDefaultPath;
         }
 
-        /// <summary>
-        /// Resolves class name and data name, stripping suffix if present.
-        /// </summary>
+        private static string GetFolderFromSelection()
+        {
+            foreach (UnityEngine.Object obj in Selection.objects)
+            {
+                if (obj == null)
+                    continue;
+
+                string path = AssetDatabase.GetAssetPath(obj);
+
+                if (string.IsNullOrEmpty(path))
+                    continue;
+
+                return AssetDatabase.IsValidFolder(path) 
+                    ? path 
+                    : Path.GetDirectoryName(path);
+            }
+            return null;
+        }
+
+        private static string GetFolderFromProjectWindow()
+        {
+            EditorWindow projectWindow = EditorWindow.GetWindow<EditorWindow>();
+
+            if (projectWindow == null)
+                return null;
+            
+            if (Selection.activeObject != null)
+            {
+                string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+
+                if (!string.IsNullOrEmpty(path))
+                    return AssetDatabase.IsValidFolder(path) 
+                        ? path 
+                        : Path.GetDirectoryName(path);
+            }
+            
+            return null;
+        }
+
         private static void ResolveNames(
             string userName,
             string suffixToStrip,
@@ -219,20 +242,35 @@ public class {className} : ScriptableReactive<{className}>
             string rootName = userName.EndsWith(suffixToStrip)
                 ? userName.Substring(0, userName.Length - suffixToStrip.Length)
                 : userName;
+            
+            if (string.IsNullOrEmpty(rootName))
+            {
+                rootName = className;
+            }
 
-            dataName = rootName + DATA_SUFFIX;
+            dataName = rootName + DataSuffix;
         }
 
-        /// <summary>
-        /// Writes the file and selects it in the Project window.
-        /// </summary>
         private static void WriteAndSelectFile(string path, string content)
         {
             File.WriteAllText(path, content);
             AssetDatabase.Refresh();
-
-            EditorUtility.FocusProjectWindow();
-            Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+            
+            EditorApplication.delayCall += () =>
+            {
+                UnityEngine.Object createdAsset = AssetDatabase.LoadMainAssetAtPath(path);
+                
+                if (createdAsset != null)
+                {
+                    EditorUtility.FocusProjectWindow();
+                    Selection.activeObject = createdAsset;
+                    EditorGUIUtility.PingObject(createdAsset);
+                }
+                else
+                {
+                    EditorUtility.FocusProjectWindow();
+                }
+            };
         }
     }
 }

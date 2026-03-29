@@ -45,7 +45,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         [MenuItem(Consts.MenuItemPath)]
         private static void ShowWindow()
         {
-            var window = GetWindow<ScriptablesPanelWindow>(false, Consts.WindowTitle, false);
+            var window = GetWindow<ScriptablesPanelWindow>(false, Consts.WindowTitle, true);
             window.minSize = new Vector2(MinWindowWidth, MinWindowHeight);
             window.Show();
         }

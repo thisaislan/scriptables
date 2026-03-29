@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/thisaislan/janus-scenes">
+  <a href="https://github.com/thisaislan/scriptables">
     <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/scriptables_logo.png">
   </a>
 </p>

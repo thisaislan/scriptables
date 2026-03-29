@@ -2,7 +2,7 @@
     "name": "Thisaislan.Scriptables.Editor.MenuItems",
     "rootNamespace": "",
     "references": [
-        "GUID:a7b5a400cada643a3a8381c8e24af143"
+        "GUID:1f47753a2ca3cbb43a3880826febd6dc"
     ],
     "includePlatforms": [
         "Editor"
