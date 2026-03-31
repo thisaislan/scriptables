@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating QuaternionScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(QuaternionScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(QuaternionScriptableSettings), order = 9)]
+    [CreateAssetMenu(fileName = nameof(QuaternionScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(QuaternionScriptableSettings), order = 9)]
     /// <summary>
     /// Settings scriptable object for Quaternion values
     /// </summary>

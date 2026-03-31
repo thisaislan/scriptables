@@ -106,18 +106,18 @@ namespace Thisaislan.Scriptables.Editor
         {
             dataObject = GetData();
 
-            EditorGUILayout.LabelField(Consts.RuntimeDataLabel, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(EditorConsts.RuntimeDataLabel, EditorStyles.boldLabel);
 
             if (!isSimpleType)
             {
                 EditorGUI.indentLevel++;
 
-                EditorGUILayout.LabelField(Consts.TypeLiteral, TypeNameSimplifier.SimplifyTypeName(dataObject.GetType().Name));
+                EditorGUILayout.LabelField(EditorConsts.TypeLiteral, TypeNameSimplifier.SimplifyTypeName(dataObject.GetType().Name));
             }
 
             if (dataObject == null)
             {
-                EditorGUILayout.HelpBox(Consts.WaitingForDataInitializationLabel, MessageType.Info);
+                EditorGUILayout.HelpBox(EditorConsts.WaitingForDataInitializationLabel, MessageType.Info);
                 isWaitingForCachedData = true;
                 lastRepaintTime = DateTime.Now;
                 return;
@@ -148,13 +148,13 @@ namespace Thisaislan.Scriptables.Editor
                     EditorGUILayout.Space();
                     // Show message for unsupported types
                     EditorGUILayout.HelpBox(
-                        $"{Consts.TypeLiteral} '{TypeNameSimplifier.SimplifyTypeName(valueType.Name)}' {Consts.UnsupportedTypeMessage}.", 
+                        $"{EditorConsts.TypeLiteral} '{TypeNameSimplifier.SimplifyTypeName(valueType.Name)}' {EditorConsts.UnsupportedTypeMessage}.", 
                         MessageType.Info
                     );
 
                     EditorGUILayout.Space();
                     
-                    EditorGUILayout.LabelField(Consts.ReactiveVariableName, TypeNameSimplifier.SimplifyTypeName(valueType.Name));
+                    EditorGUILayout.LabelField(EditorConsts.ReactiveVariableName, TypeNameSimplifier.SimplifyTypeName(valueType.Name));
                 }
             }
 
@@ -177,13 +177,13 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         protected virtual void DrawEditTimeState()
         {
-            EditorGUILayout.LabelField(Consts.RuntimeDataStructureLabel, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(EditorConsts.RuntimeDataStructureLabel, EditorStyles.boldLabel);
 
             if (!isSimpleType)
             {
                 EditorGUI.indentLevel++;
 
-                EditorGUILayout.LabelField(Consts.TypeLiteral, TypeNameSimplifier.SimplifyTypeName(dataObject.GetType().Name));
+                EditorGUILayout.LabelField(EditorConsts.TypeLiteral, TypeNameSimplifier.SimplifyTypeName(dataObject.GetType().Name));
             }
 
             dataObject = GetEditorData();
@@ -193,7 +193,7 @@ namespace Thisaislan.Scriptables.Editor
                 if (isSimpleType)
                 {
                     EditorGUI.indentLevel++;
-                    EditorGUILayout.LabelField(Consts.TypeLiteral, TypeNameSimplifier.SimplifyTypeName(dataObject.GetType().Name));
+                    EditorGUILayout.LabelField(EditorConsts.TypeLiteral, TypeNameSimplifier.SimplifyTypeName(dataObject.GetType().Name));
                     EditorGUI.indentLevel--;
                 }
                 else
@@ -203,7 +203,7 @@ namespace Thisaislan.Scriptables.Editor
             }
 
             EditorGUILayout.Space();
-            EditorGUILayout.HelpBox(Consts.RuntimeDataMessage, MessageType.Info);
+            EditorGUILayout.HelpBox(EditorConsts.RuntimeDataMessage, MessageType.Info);
 
             if (!isSimpleType)
             {
@@ -234,7 +234,7 @@ namespace Thisaislan.Scriptables.Editor
             // Create a rect for the label to enable click-and-drag functionality
             Rect labelRect = EditorGUILayout.GetControlRect();
             labelRect.width = 100;
-            EditorGUI.LabelField(labelRect, Consts.ReactiveVariableName);
+            EditorGUI.LabelField(labelRect, EditorConsts.ReactiveVariableName);
 
             // Create a rect for the value field
             Rect valueRect = EditorGUILayout.GetControlRect();
@@ -278,7 +278,7 @@ namespace Thisaislan.Scriptables.Editor
             }
             else
             {
-                EditorGUI.LabelField(valueRect, value != null ? value.ToString() : Consts.NullLiteral);
+                EditorGUI.LabelField(valueRect, value != null ? value.ToString() : EditorConsts.NullLiteral);
             }
 
             if (valueChanged)
@@ -318,7 +318,7 @@ namespace Thisaislan.Scriptables.Editor
             // Create a rect for the label
             Rect labelRect = EditorGUILayout.GetControlRect();
             labelRect.width = 100;
-            EditorGUI.LabelField(labelRect, Consts.ReactiveVariableName);
+            EditorGUI.LabelField(labelRect, EditorConsts.ReactiveVariableName);
 
             // Create a rect for the value field
             Rect valueRect = EditorGUILayout.GetControlRect();
@@ -448,17 +448,50 @@ namespace Thisaislan.Scriptables.Editor
         {
             try
             {
-                if (valueType == typeof(int)) return (int)currentValue + (int)delta;
-                else if (valueType == typeof(float)) return (float)currentValue + delta;
-                else if (valueType == typeof(double)) return (double)currentValue + delta;
-                else if (valueType == typeof(byte)) return (byte)Mathf.Clamp((byte)currentValue + (byte)delta, byte.MinValue, byte.MaxValue);
-                else if (valueType == typeof(sbyte)) return (sbyte)Mathf.Clamp((sbyte)currentValue + (sbyte)delta, sbyte.MinValue, sbyte.MaxValue);
-                else if (valueType == typeof(short)) return (short)Mathf.Clamp((short)currentValue + (short)delta, short.MinValue, short.MaxValue);
-                else if (valueType == typeof(ushort)) return (ushort)Mathf.Clamp((ushort)currentValue + (ushort)delta, ushort.MinValue, ushort.MaxValue);
-                else if (valueType == typeof(uint)) return (uint)Mathf.Clamp((uint)currentValue + (uint)delta, uint.MinValue, uint.MaxValue);
-                else if (valueType == typeof(long)) return (long)currentValue + (long)delta;
-                else if (valueType == typeof(ulong)) return (ulong)Mathf.Clamp((ulong)currentValue + (ulong)delta, ulong.MinValue, ulong.MaxValue);
-                else if (valueType == typeof(decimal)) return (decimal)currentValue + (decimal)((double)delta);
+                if (valueType == typeof(int))
+                {
+                    return (int)currentValue + (int)delta;
+                }
+                else if (valueType == typeof(float))
+                {
+                    return (float)currentValue + delta;
+                }
+                else if (valueType == typeof(double))
+                {
+                    return (double)currentValue + delta;
+                }
+                else if (valueType == typeof(byte))
+                {
+                    return (byte)Mathf.Clamp((byte)currentValue + (byte)delta, byte.MinValue, byte.MaxValue);
+                }
+                else if (valueType == typeof(sbyte))
+                {
+                    return (sbyte)Mathf.Clamp((sbyte)currentValue + (sbyte)delta, sbyte.MinValue, sbyte.MaxValue);
+                }
+                else if (valueType == typeof(short))
+                {
+                    return (short)Mathf.Clamp((short)currentValue + (short)delta, short.MinValue, short.MaxValue);
+                }
+                else if (valueType == typeof(ushort))
+                {
+                    return (ushort)Mathf.Clamp((ushort)currentValue + (ushort)delta, ushort.MinValue, ushort.MaxValue);
+                }
+                else if (valueType == typeof(uint))
+                {
+                    return (uint)Mathf.Clamp((uint)currentValue + (uint)delta, uint.MinValue, uint.MaxValue);
+                }
+                else if (valueType == typeof(long))
+                {
+                    return (long)currentValue + (long)delta;
+                }
+                else if (valueType == typeof(ulong))
+                {
+                    return (ulong)Mathf.Clamp((ulong)currentValue + (ulong)delta, ulong.MinValue, ulong.MaxValue);
+                }
+                else if (valueType == typeof(decimal))
+                {
+                    return (decimal)currentValue + (decimal)((double)delta);
+                }
                 else if (valueType == typeof(char)) 
                 {
                     int charValue = (char)currentValue;
@@ -560,7 +593,7 @@ namespace Thisaislan.Scriptables.Editor
             }
             else
             {
-                Printer.PrintMessage(Consts.NoDataAvailableMessage);
+                Printer.PrintMessage(EditorConsts.NoDataAvailableMessage);
             }
         }
 
@@ -569,7 +602,7 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         protected virtual string FormatObjectManually(object data)
         {
-            if (data == null) { return Consts.NullLiteral; }
+            if (data == null) { return EditorConsts.NullLiteral; }
 
             Type type = data.GetType();
 
@@ -589,11 +622,11 @@ namespace Thisaislan.Scriptables.Editor
                 try
                 {
                     object value = field.GetValue(data);
-                    sb.AppendLine($"  {field.Name}: {value ?? Consts.NullLiteral}");
+                    sb.AppendLine($"  {field.Name}: {value ?? EditorConsts.NullLiteral}");
                 }
                 catch
                 {
-                    sb.AppendLine($"  {field.Name}: {Consts.AppendError}");
+                    sb.AppendLine($"  {field.Name}: {EditorConsts.AppendError}");
                 }
             }
 
@@ -601,12 +634,25 @@ namespace Thisaislan.Scriptables.Editor
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Repaint on update
+        /// </summary>
+        protected void RepaintIfNotNull()
+        {
+            if (this == null)
+            {
+                return;
+            }
+
+            Repaint();
+        }
         
+        protected virtual void NotifyValue() { /* To be used by the children*/}
+
         // Abstract methods that must be implemented by derived classes
         protected abstract object GetData();
         protected abstract object GetEditorData();
         protected abstract void SetData(object data);
-        protected abstract void NotifyValue();
         protected abstract void ResetToDefaultState();
         protected abstract Type GetValueType();
         protected abstract void DrawRuntimeBottom();

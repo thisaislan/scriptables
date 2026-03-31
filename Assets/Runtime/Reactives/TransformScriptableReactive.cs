@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating TransformScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(TransformScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(TransformScriptableReactive), order = 8)]
+    [CreateAssetMenu(fileName = nameof(TransformScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(TransformScriptableReactive), order = 8)]
     /// <summary>
     /// Reactive scriptable object for Transform references with change notifications
     /// </summary>

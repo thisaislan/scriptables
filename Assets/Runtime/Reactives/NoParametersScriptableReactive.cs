@@ -11,7 +11,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating NoParametersScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(NoParametersScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(NoParametersScriptableReactive), order = 1)]
+    [CreateAssetMenu(fileName = nameof(NoParametersScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(NoParametersScriptableReactive), order = 1)]
     /// <summary>
     /// A scriptable event system that broadcasts notifications without parameters.
     /// Register observers using AddObserver, remove them with RemoveObserver, 

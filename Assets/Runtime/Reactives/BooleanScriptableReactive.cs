@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating BooleanScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(BooleanScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(BooleanScriptableReactive), order = 2)]
+    [CreateAssetMenu(fileName = nameof(BooleanScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(BooleanScriptableReactive), order = 2)]
     /// <summary>
     /// Reactive scriptable object for boolean values with change notifications
     /// </summary>

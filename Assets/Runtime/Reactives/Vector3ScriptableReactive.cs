@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating Vector3ScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(Vector3ScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(Vector3ScriptableReactive), order = 11)]
+    [CreateAssetMenu(fileName = nameof(Vector3ScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(Vector3ScriptableReactive), order = 11)]
     /// <summary>
     /// Reactive scriptable object for Vector3 values with change notifications
     /// </summary>

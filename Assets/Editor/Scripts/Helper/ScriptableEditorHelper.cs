@@ -29,7 +29,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
                 enterChildren = false;
 
                 // Skip the editorData field as it's handled separately
-                if (property.name.Equals(Consts.ScriptPropertyName))
+                if (property.name.Equals(EditorConsts.ScriptPropertyName))
                 {
                     using (new EditorGUI.DisabledScope(true))
                     {
@@ -217,9 +217,9 @@ namespace Thisaislan.Scriptables.Editor.Helpers
             {
                 // Fallback for unsupported Unity types
                 if (useLayout)
-                    EditorGUILayout.LabelField(fieldName, value != null ? value.ToString() : Consts.NullLiteral);
+                    EditorGUILayout.LabelField(fieldName, value != null ? value.ToString() : EditorConsts.NullLiteral);
                 else
-                    EditorGUI.LabelField(rect, value != null ? value.ToString() : Consts.NullLiteral);
+                    EditorGUI.LabelField(rect, value != null ? value.ToString() : EditorConsts.NullLiteral);
             }
 
             return (newValue, valueChanged);
@@ -239,7 +239,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
             // Check for self-reference
             if (fieldType == parentType)
             {
-                EditorGUILayout.LabelField(fieldName, $"{TypeNameSimplifier.SimplifyTypeName(fieldType.Name)} - {Consts.SelfReferenceNotSupported}");
+                EditorGUILayout.LabelField(fieldName, $"{TypeNameSimplifier.SimplifyTypeName(fieldType.Name)} - {EditorConsts.SelfReferenceNotSupported}");
                 return value;
             }
             
@@ -284,7 +284,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
             catch
             {
                 // Handle any errors during field drawing
-                EditorGUILayout.LabelField(fieldName, $"{TypeNameSimplifier.SimplifyTypeName(fieldType.Name)} - {Consts.TypeNotSupported}");
+                EditorGUILayout.LabelField(fieldName, $"{TypeNameSimplifier.SimplifyTypeName(fieldType.Name)} - {EditorConsts.TypeNotSupported}");
                 return value;
             }
         }
@@ -306,7 +306,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
             // Check for circular references
             if (drawnObjects.Contains(data))
             {
-                EditorGUILayout.HelpBox(Consts.CircularReferenceDetected, MessageType.Warning);
+                EditorGUILayout.HelpBox(EditorConsts.CircularReferenceDetected, MessageType.Warning);
                 return;
             }
             
@@ -342,7 +342,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
 
             if (IsSimpleType(dataType))
             {
-                EditorGUILayout.LabelField(Consts.ReactiveVariableName, TypeNameSimplifier.SimplifyTypeName(dataType.Name));
+                EditorGUILayout.LabelField(EditorConsts.ReactiveVariableName, TypeNameSimplifier.SimplifyTypeName(dataType.Name));
             }
             else
             {
@@ -354,7 +354,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
                     // Check for self-reference
                     if (fieldType == dataType)
                     {
-                        typeName += $" - {Consts.SelfReferenceNotSupported}";
+                        typeName += $" - {EditorConsts.SelfReferenceNotSupported}";
                     }
 
                     EditorGUILayout.LabelField(
@@ -432,7 +432,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
 
             // Try to get the value of the private field editorData
             var type = targetObj.GetType();
-            var editorDataField = type.GetField(Consts.EditorDataField, BindingFlags.NonPublic | BindingFlags.Instance);
+            var editorDataField = type.GetField(EditorConsts.EditorDataField, BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (editorDataField != null)
             {
@@ -474,7 +474,7 @@ namespace Thisaislan.Scriptables.Editor.Helpers
             }
             catch (Exception e)
             {
-                Printer.PrintWarning($"{Consts.CustomInspectorError}: {e}");
+                Printer.PrintWarning($"{EditorConsts.CustomInspectorError}{EditorConsts.Colon} {e}");
             }
         }
     }

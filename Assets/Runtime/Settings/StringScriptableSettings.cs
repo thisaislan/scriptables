@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating StringScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(StringScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(StringScriptableSettings), order = 6)]
+    [CreateAssetMenu(fileName = nameof(StringScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(StringScriptableSettings), order = 6)]
     /// <summary>
     /// Settings scriptable object for string values
     /// </summary>

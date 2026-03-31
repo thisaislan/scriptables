@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating IntScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(IntScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(IntScriptableSettings), order = 3)]
+    [CreateAssetMenu(fileName = nameof(IntScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(IntScriptableSettings), order = 3)]
     /// <summary>
     /// Settings scriptable object for integer values
     /// </summary>

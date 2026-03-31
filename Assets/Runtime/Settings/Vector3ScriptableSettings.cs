@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating Vector3ScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(Vector3ScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(Vector3ScriptableSettings), order = 11)]
+    [CreateAssetMenu(fileName = nameof(Vector3ScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(Vector3ScriptableSettings), order = 11)]
     /// <summary>
     /// Settings scriptable object for Vector3 values
     /// </summary>

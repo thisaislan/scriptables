@@ -15,6 +15,8 @@ namespace Thisaislan.Scriptables.Editor
     {
         private bool serialized;
         private Vector2 scrollPos;
+
+        BaseScriptableReactiveEditorDebbugable scriptable;
         
         // List of types that should be shown as not serialized
         private static readonly HashSet<Type> NonSerializedTypes = new HashSet<Type>
@@ -39,11 +41,15 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         protected override void OnEnable()
         {
+            scriptable = target as BaseScriptableReactiveEditorDebbugable;
+
             base.OnEnable();
-            BaseScriptableReactiveEditorDebbugable scriptable = GetTarget();
-            EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(Consts.ScriptableReactiveIconName));
+
+            EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(EditorConsts.ScriptableReactiveIconName));
             isSimpleType = scriptableEditorHelper.IsSimpleType(scriptable.GetValueType());
             serialized = true;
+
+            EditorApplication.update += RepaintIfNotNull;
         }
 
         /// <summary>
@@ -60,7 +66,7 @@ namespace Thisaislan.Scriptables.Editor
 
                 if (!isSimpleType && !scriptableEditorHelper.IsUnitySerializable(GetData().GetType()))
                 {
-                    scriptableEditorHelper.DrawEditorDataAsExpanded(serializedObject, Consts.EditorValueField, Consts.EditorValueLabel);
+                    scriptableEditorHelper.DrawEditorDataAsExpanded(serializedObject, EditorConsts.EditorValueField, EditorConsts.EditorValueLabel);
                 }
                 else
                 {
@@ -78,12 +84,30 @@ namespace Thisaislan.Scriptables.Editor
         }
 
         /// <summary>
+        /// Checks if this editor requires constant repaints in its current state.
+        /// </summary>
+        public override bool RequiresConstantRepaint()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Clean up when the editor is disabled
+        /// </summary>
+        protected override void OnDisable()
+        {
+            EditorApplication.update -= RepaintIfNotNull;
+
+            base.OnDisable();
+        }
+
+        /// <summary>
         /// Draws the editor value field
         /// </summary>
         private void DrawEditorValueField()
         {
-            SerializedProperty editorValueProperty = serializedObject.FindProperty(Consts.EditorValueField);
-            Type valueType = GetTarget().GetValueType();
+            SerializedProperty editorValueProperty = serializedObject.FindProperty(EditorConsts.EditorValueField);
+            Type valueType = scriptable.GetValueType();
             
             // Check if the type is in our non-serialized list
             bool isNonSerializedType = NonSerializedTypes.Contains(valueType);
@@ -111,7 +135,7 @@ namespace Thisaislan.Scriptables.Editor
                         EditorGUI.indentLevel++;
                     }
 
-                    EditorGUILayout.PropertyField(editorValueProperty, new GUIContent(Consts.ReactiveVariableName), true);
+                    EditorGUILayout.PropertyField(editorValueProperty, new GUIContent(EditorConsts.ReactiveVariableName), true);
 
                     if (isSimpleType)
                     {
@@ -125,10 +149,10 @@ namespace Thisaislan.Scriptables.Editor
 
                 serialized = false;
                 string message = isNonSerializedType ?
-                    $"{TypeNameSimplifier.SimplifyTypeName(valueType.Name)} - {Consts.TypeNotSerialized}" :
-                    $"{Consts.ScriptableReactiveName}<{TypeNameSimplifier.SimplifyTypeName(valueType.Name)}> - {Consts.TypeNotSerialized}";
+                    $"{TypeNameSimplifier.SimplifyTypeName(valueType.Name)} - {EditorConsts.TypeNotSerialized}" :
+                    $"{EditorConsts.ScriptableReactiveName}<{TypeNameSimplifier.SimplifyTypeName(valueType.Name)}> - {EditorConsts.TypeNotSerialized}";
 
-                string combinedText = $"{Consts.EditorValueLabel} ({message})";
+                string combinedText = $"{EditorConsts.EditorValueLabel} ({message})";
                 EditorGUILayout.LabelField(combinedText, EditorStyles.boldLabel);
             }
         }
@@ -145,7 +169,7 @@ namespace Thisaislan.Scriptables.Editor
             Vector3 euler = quat.eulerAngles;
             
             // Draw a compact Vector3 field
-            Vector3 newEuler = EditorGUILayout.Vector3Field(Consts.ReactiveVariableName, euler);
+            Vector3 newEuler = EditorGUILayout.Vector3Field(EditorConsts.ReactiveVariableName, euler);
             
             // Update if changed
             if (newEuler != euler)
@@ -168,10 +192,10 @@ namespace Thisaislan.Scriptables.Editor
             // For serialized Quaternion structs
             if (property.hasChildren)
             {
-                float x = property.FindPropertyRelative("x")?.floatValue ?? 0;
-                float y = property.FindPropertyRelative("y")?.floatValue ?? 0;
-                float z = property.FindPropertyRelative("z")?.floatValue ?? 0;
-                float w = property.FindPropertyRelative("w")?.floatValue ?? 1;
+                float x = property.FindPropertyRelative(EditorConsts.XCoordinatesPropertyName)?.floatValue ?? 0;
+                float y = property.FindPropertyRelative(EditorConsts.YCoordinatesPropertyName)?.floatValue ?? 0;
+                float z = property.FindPropertyRelative(EditorConsts.ZCoordinatesPropertyName)?.floatValue ?? 0;
+                float w = property.FindPropertyRelative(EditorConsts.WCoordinatesPropertyName)?.floatValue ?? 1;
                 
                 return new Quaternion(x, y, z, w);
             }
@@ -193,24 +217,16 @@ namespace Thisaislan.Scriptables.Editor
             // For serialized Quaternion structs
             if (property.hasChildren)
             {
-                SerializedProperty xProp = property.FindPropertyRelative("x");
-                SerializedProperty yProp = property.FindPropertyRelative("y");
-                SerializedProperty zProp = property.FindPropertyRelative("z");
-                SerializedProperty wProp = property.FindPropertyRelative("w");
+                SerializedProperty xProp = property.FindPropertyRelative(EditorConsts.XCoordinatesPropertyName);
+                SerializedProperty yProp = property.FindPropertyRelative(EditorConsts.YCoordinatesPropertyName);
+                SerializedProperty zProp = property.FindPropertyRelative(EditorConsts.ZCoordinatesPropertyName);
+                SerializedProperty wProp = property.FindPropertyRelative(EditorConsts.WCoordinatesPropertyName);
                 
                 if (xProp != null) xProp.floatValue = quaternion.x;
                 if (yProp != null) yProp.floatValue = quaternion.y;
                 if (zProp != null) zProp.floatValue = quaternion.z;
                 if (wProp != null) wProp.floatValue = quaternion.w;
             }
-        }
-
-        /// <summary>
-        /// Get the target
-        /// </summary>
-        private BaseScriptableReactiveEditorDebbugable GetTarget()
-        {
-            return (BaseScriptableReactiveEditorDebbugable)target;
         }
 
         /// <summary>
@@ -228,16 +244,39 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         protected override void PrintDataDebug()
         {
-            GetTarget().PrintDataDebugEditor();
+            scriptable.PrintDataDebugEditor();
         }
 
         // Implementation of abstract methods
-        protected override object GetData() { return GetTarget().GetRuntimeValue(); }
-        protected override object GetEditorData() { return GetTarget().GetEditorValue(); }
-        protected override void SetData(object data) { GetTarget().SetRuntimeValue(data); }
-        protected override void NotifyValue() { GetTarget().NotifyValue(); }
-        protected override void ResetToDefaultState() { GetTarget().ResetToDefaultState(); }
-        protected override Type GetValueType() { return GetTarget().GetValueType(); }
+        protected override object GetData()
+        { 
+            return scriptable.GetRuntimeValue(); 
+        }
+
+        protected override object GetEditorData()
+        { 
+            return scriptable.GetEditorValue(); 
+        }
+
+        protected override void SetData(object data)
+        { 
+            scriptable.SetRuntimeValue(data);
+        }
+
+        protected override void NotifyValue()
+        {
+            scriptable.NotifyValue();
+        }
+
+        protected override void ResetToDefaultState()
+        {
+            scriptable.ResetToDefaultState();
+        }
+
+        protected override Type GetValueType()
+        {
+            return scriptable.GetValueType();
+        }
 
         /// <summary>
         /// Draws runtime observers
@@ -246,7 +285,6 @@ namespace Thisaislan.Scriptables.Editor
         {
             EditorGUI.indentLevel++;
 
-            BaseScriptableReactiveEditorDebbugable scriptable = GetTarget();
             Type type = scriptable.GetType();
 
             // Traverse the inheritance chain to find the private "action" field
@@ -254,24 +292,25 @@ namespace Thisaislan.Scriptables.Editor
             
             while (type != null)
             {
-                actionField = type.GetField(Consts.ActionField, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                actionField = type.GetField(EditorConsts.ActionField, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 
                 if (actionField != null)
                 {
                     break;
                 }
+                
                 type = type.BaseType;
             }
 
             Delegate actionDelegate = actionField?.GetValue(scriptable) as Delegate;
 
-            EditorGUILayout.LabelField(Consts.RuntimeObserversSectionTitle, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(EditorConsts.RuntimeObserversSectionTitle, EditorStyles.boldLabel);
             EditorGUILayout.Space(2);
 
             if (actionDelegate == null || actionDelegate.GetInvocationList().Length == 0)
             {
                 EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-                EditorGUILayout.LabelField(Consts.NoObserversRegisteredMessage, GUILayout.Height(20));
+                EditorGUILayout.LabelField(EditorConsts.NoObserversRegisteredMessage, GUILayout.Height(20));
                 EditorGUILayout.EndHorizontal();
                 EditorGUI.indentLevel--;
                 return;
@@ -283,75 +322,279 @@ namespace Thisaislan.Scriptables.Editor
         }
 
         /// <summary>
-        /// Draws runtime observers list
+        /// Draws the complete runtime observers list including header, scrollable body, and all observer rows.
         /// </summary>
+        /// <param name="actionDelegate">The delegate containing all registered observers to display.</param>
         protected virtual void DrawRuntimeObserversList(Delegate actionDelegate)
         {
             Delegate[] invocationList = actionDelegate.GetInvocationList();
 
-            // Calculate content height
-            float rowHeight = 20f;
+            float rowHeight = 18f;
             float headerHeight = 25f;
-            float maxHeight = 200f;
-            float contentHeight = headerHeight + rowHeight * invocationList.Length;
+            float maxHeight = 180f;
+
+            float minTargetWidth = 200f;
+            float methodPreferredWidth = 200f;
+            float minMethodWidth = 60f;
+
+            float buttonWidth = 50f;
+            float spacing = 2f;
+
+            float contentHeight = rowHeight * invocationList.Length;
             bool needsScroll = contentHeight > maxHeight;
 
-            // Header row
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            DrawObserversListHeader(headerHeight, buttonWidth, spacing, minTargetWidth, methodPreferredWidth, minMethodWidth);
+
+            BeginObserversListBody(needsScroll, maxHeight, contentHeight);
+
+            DrawObserversListRows(
+                invocationList,
+                rowHeight,
+                buttonWidth,
+                spacing,
+                minTargetWidth,
+                methodPreferredWidth,
+                minMethodWidth
+            );
+
+            EndObserversListBody(needsScroll);
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Draws the header row of the observers list with column labels (Observer and Method).
+        /// </summary>
+        /// <param name="headerHeight">Height of the header row.</param>
+        /// <param name="buttonWidth">Fixed width reserved for the notify button column.</param>
+        /// <param name="spacing">Horizontal spacing between columns.</param>
+        /// <param name="minTargetWidth">Minimum width for the target (observer) column.</param>
+        /// <param name="methodPreferredWidth">Preferred width for the method name column.</param>
+        /// <param name="minMethodWidth">Minimum width for the method name column before it forces the target column to shrink.</param>
+        private void DrawObserversListHeader(
+            float headerHeight,
+            float buttonWidth,
+            float spacing,
+            float minTargetWidth,
+            float methodPreferredWidth,
+            float minMethodWidth)
+        {
             EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-            EditorGUILayout.LabelField(Consts.ObserverLabel, EditorStyles.boldLabel, GUILayout.Width(200));
-            EditorGUILayout.LabelField(Consts.MethodLabel, EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
+
+            Rect headerRect = EditorGUILayout.GetControlRect(false, headerHeight);
+
+            float availableWidth = headerRect.width - buttonWidth - spacing;
+
+            ObserversListCalculateWidths(
+                availableWidth,
+                minTargetWidth,
+                methodPreferredWidth,
+                minMethodWidth,
+                out float targetWidth,
+                out float methodWidth
+            );
+
+            Rect targetRect = new Rect(headerRect.x, headerRect.y, targetWidth, headerRect.height);
+            Rect methodRect = new Rect(targetRect.xMax, headerRect.y, methodWidth, headerRect.height);
+
+            EditorGUI.LabelField(targetRect, EditorConsts.ObserverLabel, EditorStyles.boldLabel);
+            EditorGUI.LabelField(methodRect, EditorConsts.MethodLabel, EditorStyles.boldLabel);
+
             EditorGUILayout.EndHorizontal();
+        }
 
+        /// <summary>
+        /// Begins the scrollable or fixed-height container for the list of observer rows.
+        /// </summary>
+        /// <param name="needsScroll">If true, enables scrolling; otherwise uses a fixed-height layout.</param>
+        /// <param name="maxHeight">Maximum height of the scrollable area when scrolling is enabled.</param>
+        /// <param name="contentHeight">Total height of the content when scrolling is not needed.</param>
+        private void BeginObserversListBody(bool needsScroll, float maxHeight, float contentHeight)
+        {
             if (needsScroll)
             {
-                scrollPos = EditorGUILayout.BeginScrollView(scrollPos, EditorStyles.helpBox, GUILayout.Height(maxHeight));
+                scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(maxHeight));
             }
             else
             {
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(contentHeight));
+                EditorGUILayout.BeginVertical(GUILayout.Height(contentHeight));
             }
+        }
 
-            EditorGUILayout.Space(2);
-
-            // List of observers
-            for (int i = 0; i < invocationList.Length; i++)
-            {
-                Delegate del = invocationList[i];
-
-                if (del == null)
-                {
-                    continue;
-                }
-
-                string targetName = del.Target != null ? del.Target.ToString() : Consts.DefaultReactiveMethodName;
-                string methodName = del.Method.Name;
-
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(targetName, GUILayout.Width(200));
-                EditorGUILayout.LabelField(methodName, GUILayout.ExpandWidth(true));
-                EditorGUILayout.EndHorizontal();
-
-                // Get the rect of the last row and draw a floating button on the right
-                Rect lastRect = GUILayoutUtility.GetLastRect();
-                Rect buttonRect = new Rect(lastRect.xMax - 50, lastRect.y, 50, lastRect.height);
-
-                if (GUI.Button(buttonRect, Consts.SelectButtonLabel))
-                {
-                    if (del.Target is UnityEngine.Object obj)
-                    {
-                        Selection.activeObject = obj;
-                        EditorGUIUtility.PingObject(obj);
-                    }
-                }
-            }
-
+        /// <summary>
+        /// Ends the scrollable or fixed-height container for the observer list.
+        /// </summary>
+        /// <param name="needsScroll">If true, ends the scroll view; otherwise ends the vertical layout.</param>
+        private void EndObserversListBody(bool needsScroll)
+        {
             if (needsScroll)
-            {
                 EditorGUILayout.EndScrollView();
-            }
             else
-            {
                 EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Draws all observer rows from the provided delegate array.
+        /// </summary>
+        /// <param name="invocationList">Array of delegates representing each observer.</param>
+        /// <param name="rowHeight">Height of each observer row.</param>
+        /// <param name="buttonWidth">Fixed width of the notify button column.</param>
+        /// <param name="spacing">Horizontal spacing between columns.</param>
+        /// <param name="minTargetWidth">Minimum width for the target (observer) column.</param>
+        /// <param name="methodPreferredWidth">Preferred width for the method name column.</param>
+        /// <param name="minMethodWidth">Minimum width for the method name column.</param>
+        private void DrawObserversListRows(
+            Delegate[] invocationList,
+            float rowHeight,
+            float buttonWidth,
+            float spacing,
+            float minTargetWidth,
+            float methodPreferredWidth,
+            float minMethodWidth)
+        {
+            foreach (var del in invocationList)
+            {
+                if (del == null) continue;
+
+                DrawObserversListRow(
+                    del,
+                    rowHeight,
+                    buttonWidth,
+                    spacing,
+                    minTargetWidth,
+                    methodPreferredWidth,
+                    minMethodWidth
+                );
+            }
+        }
+
+        /// <summary>
+        /// Draws a single observer row with target name, method name, and a select button.
+        /// </summary>
+        /// <param name="del">The delegate representing this observer.</param>
+        /// <param name="rowHeight">Height of the row.</param>
+        /// <param name="buttonWidth">Fixed width of the notify button column.</param>
+        /// <param name="spacing">Horizontal spacing between columns.</param>
+        /// <param name="minTargetWidth">Minimum width for the target (observer) column.</param>
+        /// <param name="methodPreferredWidth">Preferred width for the method name column.</param>
+        /// <param name="minMethodWidth">Minimum width for the method name column.</param>
+        private void DrawObserversListRow(
+            Delegate del,
+            float rowHeight,
+            float buttonWidth,
+            float spacing,
+            float minTargetWidth,
+            float methodPreferredWidth,
+            float minMethodWidth)
+        {
+            string targetName = del.Target != null
+                ? del.Target.ToString()
+                : EditorConsts.DefaultReactiveMethodName;
+
+            string methodName = del.Method.Name;
+
+            Rect rowRect = EditorGUILayout.GetControlRect(false, rowHeight);
+
+            float availableWidth = rowRect.width - buttonWidth - spacing;
+
+            ObserversListCalculateWidths(
+                availableWidth,
+                minTargetWidth,
+                methodPreferredWidth,
+                minMethodWidth,
+                out float targetWidth,
+                out float methodWidth
+            );
+
+            Rect contentRect = new Rect(rowRect.x, rowRect.y, availableWidth, rowHeight);
+
+            Rect targetRect = new Rect(contentRect.x, contentRect.y, targetWidth, contentRect.height);
+            Rect methodRect = new Rect(targetRect.xMax, contentRect.y, methodWidth, contentRect.height);
+            Rect buttonRect = new Rect(contentRect.xMax + spacing, rowRect.y, buttonWidth, rowRect.height);
+
+            DrawObserversListRowButton(contentRect, del);
+            DrawObserversListRowLabels(targetRect, methodRect, targetName, methodName);
+            DrawNotifyButton(buttonRect, del);
+        }
+
+        /// <summary>
+        /// Calculates the target and method column widths based on available space and constraints.
+        /// </summary>
+        /// <param name="availableWidth">Total width available for both columns (excluding button).</param>
+        /// <param name="minTargetWidth">Minimum width allowed for the target column.</param>
+        /// <param name="methodPreferredWidth">Preferred width for the method column.</param>
+        /// <param name="minMethodWidth">Minimum width allowed for the method column.</param>
+        /// <param name="targetWidth">Calculated width for the target column (output).</param>
+        /// <param name="methodWidth">Calculated width for the method column (output).</param>
+        private void ObserversListCalculateWidths(
+            float availableWidth,
+            float minTargetWidth,
+            float methodPreferredWidth,
+            float minMethodWidth,
+            out float targetWidth,
+            out float methodWidth)
+        {
+            targetWidth = Mathf.Max(minTargetWidth, availableWidth - methodPreferredWidth);
+            methodWidth = availableWidth - targetWidth;
+
+            if (methodWidth < minMethodWidth)
+            {
+                methodWidth = minMethodWidth;
+                targetWidth = availableWidth - methodWidth;
+            }
+        }
+
+        /// <summary>
+        /// Draws the selection button for a row, which highlights and pings the target object in the editor.
+        /// </summary>
+        /// <param name="rect">Rectangle where the button should be drawn.</param>
+        /// <param name="del">The delegate whose target will be selected.</param>
+        private void DrawObserversListRowButton(Rect rect, Delegate del)
+        {
+            GUIContent content = new GUIContent(string.Empty, EditorConsts.SelectToolTipMessage);
+
+            if (GUI.Button(rect, content, EditorStyles.miniButton))
+            {
+                if (del.Target is UnityEngine.Object obj)
+                {
+                    Selection.activeObject = obj;
+                    EditorGUIUtility.PingObject(obj);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws the target name and method name labels for an observer row.
+        /// </summary>
+        /// <param name="targetRect">Rectangle for the target name label.</param>
+        /// <param name="methodRect">Rectangle for the method name label.</param>
+        /// <param name="targetName">The name of the target object.</param>
+        /// <param name="methodName">The name of the method.</param>
+        private void DrawObserversListRowLabels(Rect targetRect, Rect methodRect, string targetName, string methodName)
+        {
+            EditorGUI.LabelField(targetRect, targetName);
+            EditorGUI.LabelField(methodRect, methodName);
+        }
+
+        /// <summary>
+        /// Draws a button that invokes the observer delegate with the current reactive value.
+        /// </summary>
+        /// <param name="rect">Rectangle where the button should be drawn.</param>
+        /// <param name="del">The delegate to invoke when the button is pressed.</param>
+        private void DrawNotifyButton(Rect rect, Delegate del)
+        {
+            if (GUI.Button(rect, EditorConsts.NotifyButtonLabel))
+            {
+                try
+                {
+                    del.DynamicInvoke(scriptable.GetEditorValue());
+                }
+                catch
+                {
+                    // Silently catch any exceptions during dynamic invocation
+                }
             }
         }
 
@@ -360,14 +603,14 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         protected virtual void DrawRuntimeButtons()
         {
-            if (GUILayout.Button(Consts.PrintRuntimeDataLabel))
+            if (GUILayout.Button(EditorConsts.PrintRuntimeDataLabel))
             {
                 PrintDataDebug();
             }
 
             EditorGUILayout.Space();
 
-            if (GUILayout.Button(Consts.NotifyRuntimeDataLabel))
+            if (GUILayout.Button(EditorConsts.NotifyRuntimeDataLabel))
             {
                 NotifyValue();
             }
@@ -376,7 +619,7 @@ namespace Thisaislan.Scriptables.Editor
             {
                 EditorGUILayout.Space();
 
-                if (GUILayout.Button(Consts.ResetRuntimeDataLabel))
+                if (GUILayout.Button(EditorConsts.ResetRuntimeDataLabel))
                 {
                     ResetRuntimeData();
                 }

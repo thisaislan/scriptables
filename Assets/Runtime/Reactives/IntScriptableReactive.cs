@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating IntScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(IntScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(IntScriptableReactive), order = 3)]
+    [CreateAssetMenu(fileName = nameof(IntScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(IntScriptableReactive), order = 3)]
     /// <summary>
     /// Reactive scriptable object for integer values with change notifications
     /// </summary>

@@ -16,7 +16,7 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         private void OnEnable()
         {
-            EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(Consts.ScriptableReactiveIconName));
+            EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(EditorConsts.ScriptableReactiveIconName));
         }
 
         /// <summary>
@@ -31,13 +31,13 @@ namespace Thisaislan.Scriptables.Editor
 
             // Then, add a helpful info box below the default inspector to provide context or usage instructions.
             // `Consts.NoParametersScriptableReactiveEditorMessage` is likely a constant string like "This ScriptableObject reacts to events without parameters."
-            EditorGUILayout.HelpBox(Consts.NoParametersScriptableReactiveEditorMessage, MessageType.Info);
+            EditorGUILayout.HelpBox(EditorConsts.NoParametersScriptableReactiveEditorMessage, MessageType.Info);
 
             if (Application.isPlaying)
             {
                 EditorGUILayout.Space();
 
-                if (GUILayout.Button(Consts.NotifyRuntimeDataLabel))
+                if (GUILayout.Button(EditorConsts.NotifyRuntimeDataLabel))
                 {
                     ((NoParametersScriptableReactive)target).Notify();
                 }

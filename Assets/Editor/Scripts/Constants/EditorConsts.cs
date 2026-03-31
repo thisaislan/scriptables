@@ -12,7 +12,7 @@ namespace Thisaislan.Scriptables.Editor
     /// - Consistent messaging throughout the editor
     /// - Potential for future localization support
     /// </remarks>
-    internal class Consts
+    internal class EditorConsts
     {
         internal const string EditorDataTooltip = "Data that will be used as data if the data is not initialized from another source";
         internal const string EditorValueTooltip = "Value that will be used as data if the data is not initialized from another source";
@@ -48,7 +48,8 @@ namespace Thisaislan.Scriptables.Editor
         internal const string MenuItemPath = "Tools/Scriptables/Panel";
         internal const string ObserverLabel = "Observer";
         internal const string MethodLabel = "Method";
-        internal const string SelectButtonLabel = "Select";
+        internal const string SelectToolTipMessage = "Select";
+        internal const string NotifyButtonLabel = "Notify";
         internal const string WindowTitle = "Scriptables Panel";
         internal const string NoItemsLabel = "No items found.";
         internal const string ConfirmDeleteTitle = "Confirm Delete";
@@ -84,6 +85,15 @@ namespace Thisaislan.Scriptables.Editor
         internal const string TypeNotSerialized = "Not Serialized";
         internal const string ScriptableReactiveName = "ScriptableReactive";
         internal const string AppendError = "<error>";
+        internal const string XCoordinatesPropertyName = "x";
+        internal const string YCoordinatesPropertyName = "y";
+        internal const string ZCoordinatesPropertyName = "z";
+        internal const string WCoordinatesPropertyName = "w";
+        internal const string SerializationErrorMessage = "Serialization Error:";
+        internal const string AngleBracketOpen = "<";
+        internal const string AngleBracketClose = ">";
+        internal const string PlusSign = "+";
+        internal const string Colon = ":";
     }
 }
 #endif

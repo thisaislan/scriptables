@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating DoubleScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(DoubleScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(DoubleScriptableSettings), order = 5)]
+    [CreateAssetMenu(fileName = nameof(DoubleScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(DoubleScriptableSettings), order = 5)]
     /// <summary>
     /// Settings scriptable object for double values
     /// </summary>

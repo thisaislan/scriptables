@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating DoubleScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(DoubleScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(DoubleScriptableReactive), order = 5)]
+    [CreateAssetMenu(fileName = nameof(DoubleScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(DoubleScriptableReactive), order = 5)]
     /// <summary>
     /// Reactive scriptable object for double values with change notifications
     /// </summary>

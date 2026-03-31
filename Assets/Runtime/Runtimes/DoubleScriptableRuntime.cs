@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating DoubleScriptableRuntime assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(DoubleScriptableRuntime), menuName = Meta.ScriptableRuntimeMenuPath + nameof(DoubleScriptableRuntime), order = 5)]
+    [CreateAssetMenu(fileName = nameof(DoubleScriptableRuntime), menuName = RuntimeConsts.ScriptableRuntimeMenuPath + nameof(DoubleScriptableRuntime), order = 5)]
     /// <summary>
     /// Runtime scriptable object for double values
     /// </summary>

@@ -11,7 +11,7 @@ namespace Thisaislan.Scriptables
     /// - Single source of truth for paths
     /// - Easier refactoring and updates
     /// </remarks>
-    internal static class Meta
+    internal static class RuntimeConsts
     {
         internal const string ScriptableReactiveMenuPath = "Scriptables/ScriptableReactive/";
         internal const string ScriptableRuntimeMenuPath = "Scriptables/ScriptableRuntime/";

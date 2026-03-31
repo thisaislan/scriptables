@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating BooleanScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(BooleanScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(BooleanScriptableSettings), order = 2)]
+    [CreateAssetMenu(fileName = nameof(BooleanScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(BooleanScriptableSettings), order = 2)]
     /// <summary>
     /// Runtime scriptable object for boolean values
     /// </summary>

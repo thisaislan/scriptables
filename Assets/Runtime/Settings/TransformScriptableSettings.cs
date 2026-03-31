@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating TransformScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(TransformScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(TransformScriptableSettings), order = 8)]
+    [CreateAssetMenu(fileName = nameof(TransformScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(TransformScriptableSettings), order = 8)]
     /// <summary>
     /// Settings scriptable object for Transform references
     /// </summary>

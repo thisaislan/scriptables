@@ -34,7 +34,7 @@ namespace Thisaislan.Scriptables.Abstracts
 
         [SerializeField]
 #if UNITY_EDITOR
-        [Tooltip(Consts.EditorValueTooltip)]
+        [Tooltip(EditorConsts.EditorValueTooltip)]
 #endif
         private T editorValue;
 
@@ -131,10 +131,6 @@ namespace Thisaislan.Scriptables.Abstracts
         public void AddObserver(Action<T> call)
         {
             action += call;
-            
-#if UNITY_EDITOR
-            RepaintReactiveEditorForObject(this);
-#endif
         }
 
         /// <summary>
@@ -144,10 +140,6 @@ namespace Thisaislan.Scriptables.Abstracts
         public void RemoveObserver(Action<T> call)
         {
             action -= call;
-
-#if UNITY_EDITOR
-            RepaintReactiveEditorForObject(this);
-#endif
         }
 
         /// <summary>
@@ -163,7 +155,7 @@ namespace Thisaislan.Scriptables.Abstracts
 #if UNITY_EDITOR
             if (action == null || action?.GetInvocationList().Length == 0)
             {
-                Debug.LogWarning(string.Format(Meta.NoListenersEditorMessage, name));
+                Debug.LogWarning(string.Format(RuntimeConsts.NoListenersEditorMessage, name));
                 return;
             }
 #endif
@@ -241,33 +233,6 @@ namespace Thisaislan.Scriptables.Abstracts
         internal override void NotifyValue()
         {
             Notify(Value);
-        }
-
-        /// <summary>
-        /// Finds and repaints the editor inspector for a specific <see cref="ScriptableReactive{T}"/> object.
-        /// Ensures that any changes to the reactive object (e.g., new observers, updated values) are immediately
-        /// reflected in the editor GUI without requiring manual interaction.
-        /// </summary>
-        /// <param name="scriptable">
-        /// The <see cref="ScriptableReactive{T}"/> instance whose editor should be repainted.
-        /// </param>
-        internal void RepaintReactiveEditorForObject(UnityEngine.Object targetObject)
-        {
-            if (targetObject == null) return;
-
-            // Get all active editors in the project windows
-            foreach (UnityEditor.Editor editor in ActiveEditorTracker.sharedTracker.activeEditors)
-            {
-                // Check if this editor is for the object we want
-                if (editor.target == targetObject)
-                {
-                    // Ensure the editor is a ScriptableReactiveEditorDebbugableBaseEditor
-                    if (editor is ScriptableReactiveEditorDebbugableBaseEditor)
-                    {
-                        editor.Repaint();
-                    }
-                }
-            }
         }
 #endif
     }

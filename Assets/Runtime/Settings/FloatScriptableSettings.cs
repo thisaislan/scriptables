@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating FloatScriptableSettings assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(FloatScriptableSettings), menuName = Meta.ScriptableSettingsMenuPath + nameof(FloatScriptableSettings), order = 4)]
+    [CreateAssetMenu(fileName = nameof(FloatScriptableSettings), menuName = RuntimeConsts.ScriptableSettingsMenuPath + nameof(FloatScriptableSettings), order = 4)]
     /// <summary>
     /// Settings scriptable object for float values
     /// </summary>

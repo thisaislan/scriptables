@@ -40,7 +40,7 @@ namespace Thisaislan.Scriptables.Abstracts
     {
         [SerializeField]
 #if UNITY_EDITOR
-        [Tooltip(Consts.EditorDataTooltip)]
+        [Tooltip(EditorConsts.EditorDataTooltip)]
 #endif
         private T editorData; // Serialized editor data that persists between sessions
 

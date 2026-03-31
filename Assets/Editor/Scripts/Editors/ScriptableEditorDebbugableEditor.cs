@@ -13,21 +13,26 @@ namespace Thisaislan.Scriptables.Editor
     [CustomEditor(typeof(ScriptableEditorDebbugable), true)]
     internal class ScriptableEditorDebbugableEditor : BaseScriptableEditor
     {
+        protected ScriptableEditorDebbugable scriptable;
+
         /// <summary>
         /// Initializes the editor
         /// </summary>
         protected override void OnEnable()
         {
+            scriptable = target as ScriptableEditorDebbugable;
+
             base.OnEnable();
-            ScriptableEditorDebbugable scriptable = GetTarget();
 
             if (scriptable.GetScriptableEditorDebbugableType() == ScriptableEditorDebbugable.ScriptableEditorDebbugableType.Settings)
             {
-                EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(Consts.ScriptableSettingsIconName));
+                EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(EditorConsts.ScriptableSettingsIconName));
             }
             else
             {
-                EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(Consts.ScriptableRuntimeIconName));
+                EditorGUIUtility.SetIconForObject(target, Resources.Load<Texture2D>(EditorConsts.ScriptableRuntimeIconName));
+
+                EditorApplication.update += RepaintIfNotNull;
             }
 
             isSimpleType = scriptableEditorHelper.IsSimpleType(scriptable.GetData()?.GetType());
@@ -40,14 +45,13 @@ namespace Thisaislan.Scriptables.Editor
         {
             try
             {
-                ScriptableEditorDebbugable scriptable = GetTarget();
                 scriptableEditorHelper.DrawCleanDefaultInspector(serializedObject);
 
                 serializedObject.Update();
 
                 if (scriptable.GetScriptableEditorDebbugableType() == ScriptableEditorDebbugable.ScriptableEditorDebbugableType.Settings)
                 {
-                    scriptableEditorHelper.DrawEditorDataAsExpanded(serializedObject, Consts.EditorDataField, Consts.EditorDataLabel);
+                    scriptableEditorHelper.DrawEditorDataAsExpanded(serializedObject, EditorConsts.EditorDataField, EditorConsts.EditorDataLabel);
                 }
 
                 EditorGUILayout.Space();
@@ -60,40 +64,71 @@ namespace Thisaislan.Scriptables.Editor
                 
             }
         }
+
+         /// <summary>
+        /// Checks if this editor requires constant repaints in its current state.
+        /// </summary>
+        public override bool RequiresConstantRepaint()
+        {
+            return scriptable.GetScriptableEditorDebbugableType() != ScriptableEditorDebbugable.ScriptableEditorDebbugableType.Settings;
+        }
+
+        /// <summary>
+        /// Clean up when the editor is disabled
+        /// </summary>
+        protected override void OnDisable()
+        {
+            if (scriptable.GetScriptableEditorDebbugableType() != ScriptableEditorDebbugable.ScriptableEditorDebbugableType.Settings)
+            {
+                EditorApplication.update -= RepaintIfNotNull;
+            }
+
+            base.OnDisable();
+        }
         
         /// <summary>
         /// Method for drawing the bottom
         /// </summary>
         protected override void DrawRuntimeBottom()
         {
-            if (GUILayout.Button(Consts.PrintRuntimeDataLabel))
+            if (GUILayout.Button(EditorConsts.PrintRuntimeDataLabel))
             {
-                GetTarget().PrintDataDebugEditor();
+                scriptable.PrintDataDebugEditor();
             }
 
             EditorGUILayout.Space();
 
-            if (GUILayout.Button(Consts.ResetRuntimeDataLabel))
+            if (GUILayout.Button(EditorConsts.ResetRuntimeDataLabel))
             {
                 ResetRuntimeData();
             }
         }
-        
-        /// <summary>
-        /// Get target
-        /// </summary>
-        private ScriptableEditorDebbugable GetTarget()
-        {
-            return (ScriptableEditorDebbugable)target;
-        }
 
         // Implementation of abstract methods
-        protected override object GetData() { return GetTarget().GetData(); }
-        protected override object GetEditorData() { return GetTarget().GetData(); }
-        protected override void SetData(object data) { GetTarget().SetData((Data)data); }
-        protected override void NotifyValue() { /* Not used in this editor */ }
-        protected override void ResetToDefaultState() { GetTarget().ResetToDefaultState(); }
-        protected override Type GetValueType() { return GetTarget().GetData()?.GetType(); }
+        protected override object GetData()
+        {
+            return scriptable.GetData();
+        }
+
+        protected override object GetEditorData()
+        {
+            return scriptable.GetData();
+        }
+
+        protected override void SetData(object data)
+        {
+            scriptable.SetData((Data)data);
+        }
+        
+        protected override void ResetToDefaultState()
+        { 
+            scriptable.ResetToDefaultState();
+        }
+
+        protected override Type GetValueType()
+        {
+            return scriptable.GetData()?.GetType();
+        }
     }
 }
 #endif

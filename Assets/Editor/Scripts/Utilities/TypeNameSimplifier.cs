@@ -7,56 +7,71 @@ namespace Thisaislan.Scriptables.Editor
     /// Utility class for simplifying and converting type names to more readable formats.
     /// Primarily used in editor UI to display type names in a more user-friendly manner.
     /// </summary>
-    /// <remarks>
-    /// This class provides functionality to:
-    /// - Convert system type names (e.g., "Int32") to language keywords (e.g., "int")
-    /// - Handle generic type names by extracting and simplifying the base type
-    /// - Provide consistent type name formatting throughout the editor UI
-    /// </remarks>
     internal static class TypeNameSimplifier
     {
+        // String constants for type name patterns
+        private const string Backtick = "`";
+        private const string PPtrPattern = "PPtr<$";
+        private const string AngleBracketClose = ">";
+        private const string EmptyString = "";
+        
+        // System type name constants
+        private const string TypeInt32 = "Int32";
+        private const string TypeSingle = "Single";
+        private const string TypeDouble = "Double";
+        private const string TypeBoolean = "Boolean";
+        private const string TypeString = "String";
+        private const string TypeChar = "Char";
+        private const string TypeByte = "Byte";
+        private const string TypeSByte = "SByte";
+        private const string TypeInt16 = "Int16";
+        private const string TypeInt64 = "Int64";
+        private const string TypeUInt16 = "UInt16";
+        private const string TypeUInt32 = "UInt32";
+        private const string TypeUInt64 = "UInt64";
+        private const string TypeDecimal = "Decimal";
+        
+        // Simplified type name constants
+        private const string SimplifiedInt = "int";
+        private const string SimplifiedFloat = "float";
+        private const string SimplifiedDouble = "double";
+        private const string SimplifiedBool = "bool";
+        private const string SimplifiedString = "string";
+        private const string SimplifiedChar = "char";
+        private const string SimplifiedByte = "byte";
+        private const string SimplifiedSByte = "sbyte";
+        private const string SimplifiedShort = "short";
+        private const string SimplifiedLong = "long";
+        private const string SimplifiedUShort = "ushort";
+        private const string SimplifiedUInt = "uint";
+        private const string SimplifiedULong = "ulong";
+        private const string SimplifiedDecimal = "decimal";
+
         /// <summary>
         /// Dictionary mapping system type names to their simplified language keyword equivalents
         /// </summary>
-        /// <remarks>
-        /// This mapping converts .NET framework type names to their C# language keyword equivalents
-        /// for better readability in the editor interface.
-        /// </remarks>
         private static readonly Dictionary<string, string> typeNameMap = new Dictionary<string, string>
         {
-            { "Int32", "int" },      // System.Int32 → int
-            { "Single", "float" },    // System.Single → float
-            { "Double", "double" },   // System.Double → double
-            { "Boolean", "bool" },    // System.Boolean → bool
-            { "String", "string" },   // System.String → string
-            { "Char", "char" },       // System.Char → char
-            { "Byte", "byte" },       // System.Byte → byte
-            { "SByte", "sbyte" },     // System.SByte → sbyte
-            { "Int16", "short" },     // System.Int16 → short
-            { "Int64", "long" },      // System.Int64 → long
-            { "UInt16", "ushort" },   // System.UInt16 → ushort
-            { "UInt32", "uint" },     // System.UInt32 → uint
-            { "UInt64", "ulong" },    // System.UInt64 → ulong
-            { "Decimal", "decimal" }  // System.Decimal → decimal
+            { TypeInt32, SimplifiedInt },
+            { TypeSingle, SimplifiedFloat },
+            { TypeDouble, SimplifiedDouble },
+            { TypeBoolean, SimplifiedBool },
+            { TypeString, SimplifiedString },
+            { TypeChar, SimplifiedChar },
+            { TypeByte, SimplifiedByte },
+            { TypeSByte, SimplifiedSByte },
+            { TypeInt16, SimplifiedShort },
+            { TypeInt64, SimplifiedLong },
+            { TypeUInt16, SimplifiedUShort },
+            { TypeUInt32, SimplifiedUInt },
+            { TypeUInt64, SimplifiedULong },
+            { TypeDecimal, SimplifiedDecimal }
         };
 
         /// <summary>
         /// Simplifies a type name by converting system type names to language keywords
         /// and handling generic type names appropriately.
         /// </summary>
-        /// <param name="originalName">The original type name to simplify</param>
-        /// <returns>
-        /// A simplified version of the type name:
-        /// - System type names are converted to language keywords
-        /// - Generic types have their base name simplified (without generic parameters)
-        /// - Other type names are returned unchanged
-        /// </returns>
-        /// <remarks>
-        /// Examples:
-        /// - "Int32" → "int"
-        /// - "List`1" → "List" (base name only, generic parameters are removed)
-        /// - "CustomType" → "CustomType" (unchanged)
-        /// </remarks>
         internal static string SimplifyTypeName(string originalName)
         {
             // Check if we have a simplified name for this type in our mapping
@@ -66,10 +81,10 @@ namespace Thisaislan.Scriptables.Editor
             }
 
             // Handle generic types (indicated by backtick in the name, e.g., List`1, Dictionary`2)
-            if (originalName.Contains("`"))
+            if (originalName.Contains(Backtick))
             {
                 // Find the position of the backtick which indicates generic type parameters
-                int backtickIndex = originalName.IndexOf('`');
+                int backtickIndex = originalName.IndexOf(Backtick);
 
                 // Extract the base name (everything before the backtick)
                 string baseName = originalName.Substring(0, backtickIndex);
@@ -106,9 +121,8 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         internal static string CleanTypeName(string input)
         {
-            return input.Replace("PPtr<$", string.Empty).Replace(">", string.Empty);
+            return input.Replace(PPtrPattern, EmptyString).Replace(AngleBracketClose, EmptyString);
         }
-
     }
 }
 #endif

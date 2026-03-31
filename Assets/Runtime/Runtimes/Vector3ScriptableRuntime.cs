@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating Vector3ScriptableRuntime assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(Vector3ScriptableRuntime), menuName = Meta.ScriptableRuntimeMenuPath + nameof(Vector3ScriptableRuntime), order = 11)]
+    [CreateAssetMenu(fileName = nameof(Vector3ScriptableRuntime), menuName = RuntimeConsts.ScriptableRuntimeMenuPath + nameof(Vector3ScriptableRuntime), order = 11)]
     /// <summary>
     /// Runtime scriptable object for Vector3 values
     /// </summary>

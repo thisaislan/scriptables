@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating QuaternionScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(QuaternionScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(QuaternionScriptableReactive), order = 9)]
+    [CreateAssetMenu(fileName = nameof(QuaternionScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(QuaternionScriptableReactive), order = 9)]
     /// <summary>
     /// Reactive scriptable object for Quaternion values with change notifications
     /// </summary>

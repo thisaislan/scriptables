@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating GameObjectScriptableRuntime assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(GameObjectScriptableRuntime), menuName = Meta.ScriptableRuntimeMenuPath + nameof(GameObjectScriptableRuntime), order = 7)]
+    [CreateAssetMenu(fileName = nameof(GameObjectScriptableRuntime), menuName = RuntimeConsts.ScriptableRuntimeMenuPath + nameof(GameObjectScriptableRuntime), order = 7)]
     /// <summary>
     /// Runtime scriptable object for GameObject references
     /// </summary>

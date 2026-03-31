@@ -75,8 +75,9 @@ namespace Thisaislan.Scriptables.Editor.Abstracts
         public virtual void PrintDataDebugEditor()
         {
             // Format type name for better readability and print with JSON data
-            string formattedTypeName = GetData().GetType().ToString().Replace("+", "<");
-            Printer.PrintMessage($"{formattedTypeName}>\n{GetStringData()}");
+            string formattedTypeName = GetData().GetType().ToString().Replace(EditorConsts.PlusSign, EditorConsts.AngleBracketOpen);
+            
+            Printer.PrintMessage($"{formattedTypeName}{EditorConsts.AngleBracketClose}\n{GetStringData()}");
         }
 
         /// <summary>

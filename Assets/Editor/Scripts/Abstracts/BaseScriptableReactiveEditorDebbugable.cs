@@ -46,7 +46,7 @@ namespace Thisaislan.Scriptables.Editor.Abstracts
         {
             string typeName = TypeNameSimplifier.SimplifyTypeName(GetRuntimeValue().GetType().Name);
 
-            Printer.PrintMessage($"{GetType().Name}<{typeName}>:\n{GetStringValue()}");
+            Printer.PrintMessage($"{GetType().Name}{EditorConsts.AngleBracketOpen}{typeName}{EditorConsts.AngleBracketClose}{EditorConsts.Colon}\n{GetStringValue()}");
         }
 
         /// <summary>
@@ -62,7 +62,11 @@ namespace Thisaislan.Scriptables.Editor.Abstracts
         internal virtual string GetStringValue()
         {
             object value = GetRuntimeValue();
-            if (value == null) return Consts.NullLiteral;
+
+            if (value == null)
+            {
+                return EditorConsts.NullLiteral;
+            }
             
             Type valueType = value.GetType();
             
@@ -82,7 +86,7 @@ namespace Thisaislan.Scriptables.Editor.Abstracts
             if (typeof(UnityEngine.Object).IsAssignableFrom(valueType))
             {
                 UnityEngine.Object unityObj = (UnityEngine.Object)value;
-                return unityObj != null ? unityObj.name : Consts.NullLiteral;
+                return unityObj != null ? unityObj.name : EditorConsts.NullLiteral;
             }
             
             // For other types, use JSON serialization
@@ -92,7 +96,7 @@ namespace Thisaislan.Scriptables.Editor.Abstracts
             }
             catch (Exception e)
             {
-                return $"Serialization Error: {e.Message}";
+                return $"{EditorConsts.SerializationErrorMessage} {e.Message}";
             }
         }
     }

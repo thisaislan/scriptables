@@ -28,6 +28,10 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         private const float HeaderHeight = 20f;
         private const float IconSize = 20f;
         private const float MinPathWidth = 100f;
+        private const string AssetFileExtension = ".asset";
+        private const string RefQuerySuffix = "ref:";
+        private const string TildeSymbol = "...";
+
         private Tab currentTab = Tab.Debuggable;
         private Vector2 scrollPos;
         private GUIContent[] tabContents;
@@ -38,14 +42,19 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         // Custom styles for tabs
         private GUIStyle selectedTabStyle;
         private GUIStyle normalTabStyle;
+
+        // Selection tracking for keyboard navigation
+        private List<Object> currentAssetsList = new List<Object>();
+        private int selectedIndex = -1;
+        private bool isKeyboardNavigation = false;
         
         /// <summary>
         /// Menu item to open the Scriptables Panel window
         /// </summary>
-        [MenuItem(Consts.MenuItemPath)]
+        [MenuItem(EditorConsts.MenuItemPath)]
         private static void ShowWindow()
         {
-            var window = GetWindow<ScriptablesPanelWindow>(false, Consts.WindowTitle, true);
+            var window = GetWindow<ScriptablesPanelWindow>(false, EditorConsts.WindowTitle, true);
             window.minSize = new Vector2(MinWindowWidth, MinWindowHeight);
             window.Show();
         }
@@ -56,11 +65,11 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         private void OnEnable()
         {
             tabContents = new GUIContent[] {
-                new GUIContent(Consts.TabScriptablesLabel, LoadTabIcon(Consts.TabScriptablesIcon)),
-                new GUIContent(Consts.TabSettingsLabel, LoadTabIcon(Consts.TabSettingsIcon)),
-                new GUIContent(Consts.TabRuntimeLabel, LoadTabIcon(Consts.TabRuntimeIcon)),
-                new GUIContent(Consts.TabReactiveLabel, LoadTabIcon(Consts.TabReactiveIcon)),
-                new GUIContent(Consts.TabAllLabel, LoadTabIcon(Consts.TabAllIcon))
+                new GUIContent(EditorConsts.TabScriptablesLabel, LoadTabIcon(EditorConsts.TabScriptablesIcon)),
+                new GUIContent(EditorConsts.TabSettingsLabel, LoadTabIcon(EditorConsts.TabSettingsIcon)),
+                new GUIContent(EditorConsts.TabRuntimeLabel, LoadTabIcon(EditorConsts.TabRuntimeIcon)),
+                new GUIContent(EditorConsts.TabReactiveLabel, LoadTabIcon(EditorConsts.TabReactiveIcon)),
+                new GUIContent(EditorConsts.TabAllLabel, LoadTabIcon(EditorConsts.TabAllIcon))
             };
              // Create custom tab styles
             CreateTabStyles();
@@ -97,6 +106,9 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
                     {
                         currentTab = (Tab)i;
                         scrollPos = Vector2.zero;
+                        // Reset navigation state when switching tabs
+                        selectedIndex = -1;
+                        isKeyboardNavigation = false;
                     }
                 }
             }
@@ -133,9 +145,9 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         private void RenderHeader()
         {
             EditorGUILayout.BeginHorizontal(GUI.skin.textArea, GUILayout.Height(HeaderHeight));
-            GUILayout.Label(Consts.AssetColumnHeader, EditorStyles.boldLabel, GUILayout.Width(AssetColumnWidth));
-            GUILayout.Label(Consts.PathColumnHeader, EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
-            GUILayout.Label(Consts.ActionsColumnHeader, EditorStyles.boldLabel, GUILayout.Width(ActionsColumnWidth));
+            GUILayout.Label(EditorConsts.AssetColumnHeader, EditorStyles.boldLabel, GUILayout.Width(AssetColumnWidth));
+            GUILayout.Label(EditorConsts.PathColumnHeader, EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label(EditorConsts.ActionsColumnHeader, EditorStyles.boldLabel, GUILayout.Width(ActionsColumnWidth));
             EditorGUILayout.EndHorizontal();
         }
 
@@ -144,22 +156,44 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         /// </summary>
         private void RenderAssetList()
         {
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, true, true);
-
-            List<Object> assets = GetAssetsForCurrentTab()
+            // Get and store the current asset list
+            currentAssetsList = GetAssetsForCurrentTab()
                                 .OrderBy(a => a.name)
                                 .ToList();
 
-            if (assets.Count == 0)
+            // Handle keyboard navigation
+            if (Event.current.type == EventType.KeyDown && 
+                (Event.current.keyCode == KeyCode.UpArrow || 
+                Event.current.keyCode == KeyCode.DownArrow))
+            {
+                HandleKeyboardNavigation(Event.current.keyCode);
+                Event.current.Use();
+                isKeyboardNavigation = true;
+                Repaint();
+            }
+
+            // If we have keyboard navigation active, ensure selection is in view
+            if (isKeyboardNavigation && selectedIndex >= 0 && selectedIndex < currentAssetsList.Count)
+            {
+                // The actual scrolling happens in the scroll view automatically
+                // but we need to ensure the selected item is visible
+                Object selectedAsset = currentAssetsList[selectedIndex];
+                Selection.activeObject = selectedAsset;
+            }
+
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, true, true);
+
+            if (currentAssetsList.Count == 0)
             {
                 GUILayout.Space(20);
-                GUILayout.Label(Consts.NoItemsLabel, EditorStyles.centeredGreyMiniLabel);
+                GUILayout.Label(EditorConsts.NoItemsLabel, EditorStyles.centeredGreyMiniLabel);
             }
             else
             {
-                foreach (var asset in assets)
+                for (int i = 0; i < currentAssetsList.Count; i++)
                 {
-                    RenderAssetRow(asset);
+                    var asset = currentAssetsList[i];
+                    RenderAssetRow(asset, i);
                 }
             }
 
@@ -170,14 +204,25 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         /// Renders a single asset row with icon, name, path, and action buttons
         /// </summary>
         /// <param name="asset">The asset to render</param>
-        private void RenderAssetRow(Object asset)
+        /// <param name="index">The index of the asset in the list</param>
+        private void RenderAssetRow(Object asset, int index)
         {
             string path = AssetDatabase.GetAssetPath(asset);
             Rect rowRect = EditorGUILayout.BeginHorizontal();
 
-            // Highlight selected row
-            if (Selection.activeObject == asset)
+            // Highlight selected row (either by mouse click or keyboard navigation)
+            bool isSelected = (Selection.activeObject == asset) || (isKeyboardNavigation && selectedIndex == index);
+            
+            if (isSelected)
+            {
                 EditorGUI.DrawRect(rowRect, new Color(0.24f, 0.48f, 0.90f, 0.3f));
+                // Sync the selected index when mouse selection changes
+                if (Selection.activeObject == asset && (!isKeyboardNavigation || selectedIndex != index))
+                {
+                    selectedIndex = index;
+                    isKeyboardNavigation = false;
+                }
+            }
 
             // Calculate available width for path
             float availableWidth = position.width - AssetColumnWidth - ActionsColumnWidth - 30;
@@ -188,9 +233,48 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
 
             EditorGUILayout.EndHorizontal();
 
-            HandleRowClick(asset, rowRect);
+            HandleRowClick(asset, rowRect, index);
         }
-        
+
+        /// <summary>
+        /// Handles keyboard navigation with arrow keys
+        /// </summary>
+        /// <param name="keyCode">The key that was pressed</param>
+        private void HandleKeyboardNavigation(KeyCode keyCode)
+        {
+            if (currentAssetsList.Count == 0) return;
+
+            if (selectedIndex == -1)
+            {
+                // Initialize selection to the first item if nothing is selected
+                selectedIndex = 0;
+            }
+            else if (keyCode == KeyCode.UpArrow)
+            {
+                selectedIndex = Mathf.Max(0, selectedIndex - 1);
+            }
+            else if (keyCode == KeyCode.DownArrow)
+            {
+                selectedIndex = Mathf.Min(currentAssetsList.Count - 1, selectedIndex + 1);
+            }
+
+            // Ensure the selected item is visible in the scroll view
+            if (selectedIndex >= 0 && selectedIndex < currentAssetsList.Count)
+            {
+                Object selectedAsset = currentAssetsList[selectedIndex];
+                Selection.activeObject = selectedAsset;
+                
+                // Calculate the row height for scrolling (adjust this value based on your row height)
+                float rowHeight = 20f; // Approximate height of each row
+                float targetScrollY = selectedIndex * rowHeight;
+                
+                // Smoothly adjust scroll position (optional)
+                // scrollPos.y = Mathf.Lerp(scrollPos.y, targetScrollY, 0.1f);
+                // For immediate scrolling, uncomment the line below:
+                // scrollPos.y = targetScrollY;
+            }
+        }
+                
         /// <summary>
         /// Renders the asset icon and name (with rename functionality)
         /// </summary>
@@ -205,9 +289,9 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
 
             if (isRenaming && assetBeingRenamed == asset)
             {
-                GUI.SetNextControlName(Consts.RenameFieldName);
+                GUI.SetNextControlName(EditorConsts.RenameFieldName);
                 newName = EditorGUILayout.TextField(newName);
-                EditorGUI.FocusTextInControl(Consts.RenameFieldName);
+                EditorGUI.FocusTextInControl(EditorConsts.RenameFieldName);
 
                 // Handle Enter key to confirm, Escape to cancel
                 if (Event.current.isKey && Event.current.keyCode == KeyCode.Return)
@@ -251,9 +335,9 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
             EditorGUILayout.BeginHorizontal(GUILayout.Width(ActionsColumnWidth));
             
             // Ensure buttons have a fixed width and don't get squeezed
-            bool clickedSearch = GUILayout.Button(Consts.SearchButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
-            bool clickedRename = GUILayout.Button(Consts.RenameButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
-            bool clickedDelete = GUILayout.Button(Consts.DeleteButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
+            bool clickedSearch = GUILayout.Button(EditorConsts.SearchButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
+            bool clickedRename = GUILayout.Button(EditorConsts.RenameButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
+            bool clickedDelete = GUILayout.Button(EditorConsts.DeleteButtonLabel, GUILayout.Width(ButtonWidth), GUILayout.ExpandWidth(false));
             
             EditorGUILayout.EndHorizontal();
 
@@ -292,7 +376,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
             while (removeCount < shortened.Length)
             {
                 // Remove characters from the end and add ellipsis
-                string testString = shortened.Substring(0, shortened.Length - removeCount) + "...";
+                string testString = shortened.Substring(0, shortened.Length - removeCount) + TildeSymbol;
                 float testWidth = GUI.skin.label.CalcSize(new GUIContent(testString)).x;
 
                 if (testWidth <= availableWidth)
@@ -305,7 +389,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
                 // If we've removed too much, just return ellipsis
                 if (removeCount > shortened.Length - 3)
                 {
-                    return "...";
+                    return TildeSymbol;
                 }
             }
 
@@ -333,7 +417,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
             while (removeCount < shortened.Length)
             {
                 // Remove characters from the end and add ellipsis
-                string testString = shortened.Substring(0, shortened.Length - removeCount) + "...";
+                string testString = shortened.Substring(0, shortened.Length - removeCount) + TildeSymbol;
                 float testWidth = GUI.skin.label.CalcSize(new GUIContent(testString)).x;
 
                 if (testWidth <= availableWidth)
@@ -346,7 +430,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
                 // If we've removed too much, just return ellipsis
                 if (removeCount > shortened.Length - 3)
                 {
-                    return "...";
+                    return TildeSymbol;
                 }
             }
 
@@ -358,7 +442,8 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         /// </summary>
         /// <param name="asset">The clicked asset</param>
         /// <param name="rowRect">The rectangle defining the row area</param>
-        private void HandleRowClick(Object asset, Rect rowRect)
+        /// <param name="index">The index of the clicked asset</param>
+        private void HandleRowClick(Object asset, Rect rowRect, int index)
         {
             if (Event.current.type == EventType.MouseDown && rowRect.Contains(Event.current.mousePosition))
             {
@@ -368,9 +453,12 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
                     ConfirmRename(assetBeingRenamed, AssetDatabase.GetAssetPath(assetBeingRenamed));
                 }
                 Selection.activeObject = asset;
+                selectedIndex = index;
+                isKeyboardNavigation = false; // Switch back to mouse mode
                 Event.current.Use();
             }
         }
+        
         
         /// <summary>
         /// Initiates the renaming process for an asset
@@ -390,7 +478,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         /// <param name="asset">The asset to find references for</param>
         private void FindReferencesInScene(Object asset, string path)
         {
-            string searchQuery = $"ref:\"{path}\"";
+            string searchQuery = $"{RefQuerySuffix}\"{path}\"";
 
             // Create search context and open window for scene references
             var context = SearchService.CreateContext(searchQuery);
@@ -438,10 +526,10 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
             EditorApplication.delayCall += () =>
             {
                 if (EditorUtility.DisplayDialog(
-                    Consts.ConfirmDeleteTitle, 
-                    string.Format(Consts.ConfirmDeleteMessage, asset.name), 
-                    Consts.DeleteButtonLabel, 
-                    Consts.CancelButtonLabel))
+                    EditorConsts.ConfirmDeleteTitle, 
+                    string.Format(EditorConsts.ConfirmDeleteMessage, asset.name), 
+                    EditorConsts.DeleteButtonLabel, 
+                    EditorConsts.CancelButtonLabel))
                 {
                     AssetDatabase.DeleteAsset(path);
                     AssetDatabase.Refresh();
@@ -458,14 +546,14 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
             string[] filters = currentTab switch
             {
                 Tab.Debuggable => new[] { 
-                    Consts.FilterDebuggable1, 
-                    Consts.FilterDebuggable2, 
-                    Consts.FilterDebuggable3 
+                    EditorConsts.FilterDebuggable1, 
+                    EditorConsts.FilterDebuggable2, 
+                    EditorConsts.FilterDebuggable3 
                 },
-                Tab.Settings => new[] { Consts.FilterSettings },
-                Tab.Runtime => new[] { Consts.FilterRuntime },
-                Tab.Reactive => new[] { Consts.FilterReactive },
-                Tab.All => new[] { Consts.FilterAll },
+                Tab.Settings => new[] { EditorConsts.FilterSettings },
+                Tab.Runtime => new[] { EditorConsts.FilterRuntime },
+                Tab.Reactive => new[] { EditorConsts.FilterReactive },
+                Tab.All => new[] { EditorConsts.FilterAll },
                 _ => new string[0]
             };
 
@@ -503,7 +591,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
             string extension = System.IO.Path.GetExtension(assetPath).ToLower();
             
             // Exclude if it's in our exclusion list
-            return extension.Equals(".asset");
+            return extension.Equals(AssetFileExtension);
         }
         
         /// <summary>
@@ -513,7 +601,7 @@ namespace Thisaislan.Scriptables.Editor.PanelWidows
         /// <returns>The loaded texture or null if not found</returns>
         private Texture2D LoadTabIcon(string resourceName)
         {
-            var tex = Resources.Load<Texture2D>($"{Consts.EditorIconsPath}{resourceName}");
+            var tex = Resources.Load<Texture2D>($"{EditorConsts.EditorIconsPath}{resourceName}");
             return tex;
         }
     }

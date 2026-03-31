@@ -7,7 +7,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating GameObjectScriptableReactive assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(GameObjectScriptableReactive), menuName = Meta.ScriptableReactiveMenuPath + nameof(GameObjectScriptableReactive), order = 7)]
+    [CreateAssetMenu(fileName = nameof(GameObjectScriptableReactive), menuName = RuntimeConsts.ScriptableReactiveMenuPath + nameof(GameObjectScriptableReactive), order = 7)]
     /// <summary>
     /// Reactive scriptable object for GameObject references with change notifications
     /// </summary>

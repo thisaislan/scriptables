@@ -1,5 +1,10 @@
 # Changelog
 
+#### v1.6.0:
+- Add arrow control on scriptables panel
+- Add individual notification to reactive observable list
+- Inspector Improvements
+
 #### v1.5.0:
 - Add observer list on inspector
 - Add basic runtimes an settings scriptables

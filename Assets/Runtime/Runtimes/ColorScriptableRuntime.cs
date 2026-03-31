@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating ColorScriptableRuntime assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(ColorScriptableRuntime), menuName = Meta.ScriptableRuntimeMenuPath + nameof(ColorScriptableRuntime), order = 12)]
+    [CreateAssetMenu(fileName = nameof(ColorScriptableRuntime), menuName = RuntimeConsts.ScriptableRuntimeMenuPath + nameof(ColorScriptableRuntime), order = 12)]
     /// <summary>
     /// Runtime scriptable object for Color values
     /// </summary>

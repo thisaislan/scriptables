@@ -8,7 +8,7 @@ namespace Thisaislan.Scriptables
     /// <summary>
     /// Creates a menu entry for creating FloatScriptableRuntime assets in the Unity Editor
     /// </summary>
-    [CreateAssetMenu(fileName = nameof(FloatScriptableRuntime), menuName = Meta.ScriptableRuntimeMenuPath + nameof(FloatScriptableRuntime), order = 4)]
+    [CreateAssetMenu(fileName = nameof(FloatScriptableRuntime), menuName = RuntimeConsts.ScriptableRuntimeMenuPath + nameof(FloatScriptableRuntime), order = 4)]
     /// <summary>
     /// Runtime scriptable object for float values
     /// </summary>
