@@ -1,5 +1,9 @@
 # Changelog
 
+#### v1.6.1:
+- Remove value necessity on the notify method
+- Improve RequiresConstantRepaint flag
+
 #### v1.6.0:
 - Add arrow control on scriptables panel
 - Add individual notification to reactive observable list

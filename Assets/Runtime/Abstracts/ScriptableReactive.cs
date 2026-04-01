@@ -81,7 +81,7 @@ namespace Thisaislan.Scriptables.Abstracts
             protected set
             {
                 SetWithoutNotify(value);
-                Notify(value);
+                Notify();
             }
         }
 
@@ -150,7 +150,7 @@ namespace Thisaislan.Scriptables.Abstracts
         /// This method is automatically called when the Value property is set.
         /// It can also be called manually to trigger notifications without changing the stored value.
         /// </remarks>
-        public void Notify(T value)
+        public void Notify()
         {
 #if UNITY_EDITOR
             if (action == null || action?.GetInvocationList().Length == 0)
@@ -159,7 +159,7 @@ namespace Thisaislan.Scriptables.Abstracts
                 return;
             }
 #endif
-            action?.Invoke(value);
+            action?.Invoke(Value);
         }
 
 #if UNITY_EDITOR
@@ -232,7 +232,7 @@ namespace Thisaislan.Scriptables.Abstracts
         /// </summary>
         internal override void NotifyValue()
         {
-            Notify(Value);
+            Notify();
         }
 #endif
     }

@@ -70,7 +70,12 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         public override bool RequiresConstantRepaint()
         {
-            return scriptable.GetScriptableEditorDebbugableType() != ScriptableEditorDebbugable.ScriptableEditorDebbugableType.Settings;
+            if (Application.isPlaying)
+            {
+                return scriptable.GetScriptableEditorDebbugableType() != ScriptableEditorDebbugable.ScriptableEditorDebbugableType.Settings;
+            }
+            
+            return false;
         }
 
         /// <summary>

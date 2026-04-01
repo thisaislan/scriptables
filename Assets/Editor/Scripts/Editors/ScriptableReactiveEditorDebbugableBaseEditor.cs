@@ -88,7 +88,7 @@ namespace Thisaislan.Scriptables.Editor
         /// </summary>
         public override bool RequiresConstantRepaint()
         {
-            return true;
+            return Application.isPlaying;
         }
 
         /// <summary>
