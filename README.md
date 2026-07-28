@@ -1,3 +1,7 @@
+
+<br>
+<br>
+
 <p align="center">
   <a href="https://github.com/thisaislan/scriptables">
     <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/scriptables_logo.png">
@@ -7,7 +11,7 @@
 <h1 style="font-size: 50px" align ="center">
   Scriptables  
   <h4  align ="center">
-    A powerful Unity package that enhances ScriptableObjects with runtime data management, editor debugging capabilities, and intuitive data separation between editor and runtime environments.
+    Extend ScriptableObjects with reactive events, runtime reference keeping, editor debugging tools, and clean data separation between edit-time and play-mode. Ships with an inspector panel and a creation wizard.
     <br>
   </h4>
 </h1>
@@ -23,342 +27,359 @@
 
 <h1></h1>
 
-
 </br>
 
 ### Table of Contents
-- [Features](#✨-features)
-- [Overview](#🏗️-overview)
-- [Quick Start](#🚀-quick-start)
-- [Install](#📦-install)
-- [Support](#🤝-support)
-- [Thanks](#💖-thanks)
-- [License](#📄-license)
+- [Features](#-features)
+- [Overview](#-overview)
+- [Scriptables Panel](#-scriptables-panel)
+- [Quick Start](#-quick-start)
+  - [Wizard](#wizard)
+  - [Settings](#custom-scriptable-settings)
+  - [Runtime](#custom-scriptable-runtime)
+  - [Reactive](#custom-scriptable-reactive)
+  - [No-Parameter Reactive](#custom-no-parameter-reactive)
+  - [Pre-made Types](#pre-made-types)
+- [Pin Feature](#-pin-feature)
+- [Interfaces](#-interfaces)
+- [Install](#-install)
+- [Support](#-support)
+- [Thanks](#-thanks)
+- [License](#-license)
 
 </br>
 
 ## ✨ Features
 
-- **Dual Data System**: Separate editor data from runtime data with automatic reset functionality
-- **Runtime ScriptableObjects**: Data that automatically resets when exiting play mode
-- **Settings ScriptableObjects**: Preserve editor data while allowing runtime modifications
-- **Reactive ScriptableObjects**: Preserve editor data while allowing other classes to add observer to value changes
-- **Advanced Editor Integration**: Custom inspector with real-time data visualization
-- **Type-Safe Data Management**: Generic implementation supporting any serializable data type
-- **Reflection-Based UI**: Automatically generates editor UI for the data structures (Editor mode)
-- **Reset Management**: Automatic data cleanup when entering/exiting play mode
-- **Scriptable Panel**: Panel to help organize all scriptableObjects in the project (Tools/Scriptable/Panel)
+- **Creation Wizard** — step-by-step UI to create new scriptable assets with data type configuration and auto-generated script files
+- **Scriptables Panel** — centralised window to browse, search, filter, and inspect every scriptable asset in the project
+- **Reactive Events** — observable data containers that notify subscribers when values change; emit with zero allocation
+- **Pin System** — keep ScriptableObjects alive across domain reloads with `IPinnable` / `ReferenceKeeper`
+- **Subscriber Tracking** — every reactive inspector includes a live observer list showing all current subscribers; no more guessing who is listening to your events
+- **Description Field** — rich text descriptions on every asset, visible in both panel and inspector
+- **Dual Data System** — separate editor-configured data from runtime data with automatic reset on play mode transitions
+- **Runtime ScriptableObjects** — volatile data that resets on every play session; ideal for shared game state
+- **Settings ScriptableObjects** — persistent data that survives play mode; ideal for configuration and constants
+- **Standard Interfaces** — `ISubscribable<T>`, `ISettable<T>`, `IEmitable`, `IResettable`, `IInitializable<T>`, `IPinnable` — code against contracts, not concrete types
+- **Custom Inspectors** — per-type editors with real-time data visualisation, reset buttons, and printer utilities
+- **Type-Safe Generics** — no more `Data` base class constraint; freely generic on any serializable type
+- **Zero per-frame allocations** — all editor UI uses cached `GUIContent`/`GUIStyle` statics
 
 </br>
 
 ## 🏗️ Overview
 
-The package follows a clean ScriptableObject architecture by dividing them into three specialized types:
+The package organises ScriptableObjects into four specialised categories:
 
 ### ⚙️ Scriptable Settings
-- **Fixed data** configured to be used when the game runs
+- **Persistent data** configured at edit time, available at runtime
+- Survives play mode — changes in editor are serialized
 - Can be updated via remote config, repositories, or any external means
-- Persistent data that maintains editor-configured values
-- Ideal for game configuration, constants, and setup parameters
+- Ideal for game configuration, constants, balance parameters
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
+<br>
 
 ### 🔄 Scriptable Runtime
-- **Temporary data** shared across different systems in the project
-- Volatile data that resets automatically
-- Perfect for game state, temporary variables, and system communication
-- No persistence - reset to defaults on every run
+- **Volatile data** shared across systems during a session
+- Automatically resets when exiting play mode
+- No persistence — every run starts fresh
+- Perfect for game state, temporary variables, inter-system communication
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+<br>
 
 
-### 🔥Scriptable Reactive
-- **Observable data** that notifies listeners automatically when values change
-- Editor/Runtime separation maintains different values for edit mode vs. play mode
-- Event-driven architecture allows decoupled communication between systems
-- Automatic persistence preserves editor-configured values while allowing runtime modifications
+### 🔥 Scriptable Reactive
+- **Observable data** that notifies listeners automatically on change
+- Play-mode data is isolated from edit-time defaults
+- Event-driven architecture for decoupled communication
+- Also available as **NoParamsReactive** (signal-only, no payload)
 
 </br>
 
-## 🚀 Quick Start 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+## 📋 Scriptables Panel
 
 
-### Creating Scriptable Settings
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/panel.png"  width="800" > 
+  <br>
+</div>
+
+Open via **Tools > Scriptables > Panel**. The panel provides:
+
+- **Tab navigation**: Scriptables, Settings, Runtime, Reactive, ScriptableObject
+- **Search / filter**: real-time filtering by name, type, or category
+- **Pagination**: browse large collections efficiently
+- **Details card**: inspect description, type, path, and metadata of the selected asset
+- **Quick actions**: Open asset, Ping in Project window
+
+</br>
+
+## 🚀 Quick Start
+
+### Wizard
+
+The fastest way to create a new scriptable asset:
+
+1. Open **Tools > Scriptables > Wizard** or **Create > Scriptables > Wizard**
+2. Choose a category (Settings, Runtime, Reactive, No-Parameter Reactive)
+3. Configure the data type and asset name
+4. Click **Create** — the asset and script file are generated automatically
+
+> New script files can also be generated directly inside the wizard by selecting the "New" option.
+
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/wizard.png"  width="800" > 
+  <br>
+</div>
+
+<br>
+
+### Custom Scriptable Settings
 
 ```csharp
-[CreateAssetMenu(fileName = "BarScriptableSettings", menuName = "Bar/Settings")]
-public class BarScriptableSettings : ScriptableSettings<BarScriptableSettings.BarData>
+[CreateAssetMenu(fileName = nameof(GameConfigSettings), menuName = "MyGame/Settings/" + nameof(GameConfigSettings))]
+public class GameConfigSettings : ScriptableSettings<GameConfigSettings.GameConfigData>
 {
     [Serializable]
-    public class BarData : Data
+    public class GameConfigData
     {
-        public string Foo;
+        public float MusicVolume = 0.8f;
+        public int MaxPlayers = 4;
     }
 }
 ```
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-When a new instance is created of these ScriptableObjects in the Inspector, they appear with a clean, organized interface:
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-
 <div align="center" style="text-align:center;">
   <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/settings.png"  width="500" > 
   <br>
 </div>
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-And in play mode:
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-<div align="center" style="text-align:center;">
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/settings_play_mode.png"  width="500" > 
-  <br>
-</div>
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-The editor provides:
-
-    Clear separation between Settings and Runtime data
-
-    Intuitive interface for configuring default values
-
-    Visual indicators for data type and purpose
-
-    Method to initialize data when necessary
-
-    Method to print data (Editor only)
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-### Creating Scriptable Runtime
+<br>
 
 ```csharp
-[CreateAssetMenu(fileName = "FooScriptableRuntime", menuName = "Foo/Runtime")]
-public class FooScriptableRuntime : ScriptableRuntime<FooScriptableRuntime.FooData>
+public class SettingsUser : MonoBehaviour
 {
-    [Serializable]
-    public class FooData : Data
+    [SerializeField]
+    private GameConfigSettings gameConfigSettings;
+
+    private void Start()
     {
-        public int Bar;
+        // Initialise with runtime values
+        gameConfigSettings.Initialize(new GameConfigSettings.GameConfigData
+        {
+            MusicVolume = 0.5f,
+            MaxPlayers = 2
+        });
     }
 }
 ```
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+<br>
 
+### Custom Scriptable Runtime
 
-Instance:
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-
+```csharp
+[CreateAssetMenu(fileName = nameof(PlayerStateRuntime), menuName = "MyGame/Runtime/" + nameof(PlayerStateRuntime))]
+public class PlayerStateRuntime : ScriptableRuntime<PlayerStateRuntime.PlayerStateData>
+{
+    [Serializable]
+    public class PlayerStateData
+    {
+        public int Health = 100;
+        public Vector3 Position;
+    }
+}
+```
 <div align="center" style="text-align:center;">
   <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/runtime.png"  width="500" > 
   <br>
-
 </div>
+<br>
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+```csharp
+public class PlayerController : MonoBehaviour
+{
+    [SerializeField]
+    private PlayerStateRuntime playerStateRuntime;
 
+    private void Update()
+    {
+        PlayerStateRuntime.PlayerStateData playerStateData = playerStateRuntime.Data;
+        playerStateData.Position = transform.position;
+        playerStateRuntime.Set(playerStateData); // overwrites runtime data
+    }
+}
+```
 
-Play mode:
+</br>
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+### Custom Scriptable Reactive
 
+```csharp
+[CreateAssetMenu(fileName = nameof(ScoreReactive), menuName = "MyGame/Reactives/" + nameof(ScoreReactive))]
+public class ScoreReactive : ScriptableReactive<Score>
+{
+    // Score is an existing class
+}
+```
 
-<div align="center" style="text-align:center;">
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/runtime_play_mode.png"  width="500" > 
-  <br>
-</div>
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-
-As ScriptableSettings the runtime data can be changed freely during gameplay without any persistence concerns. The system automatically handles:
-
-    Automatic Reset: Runtime data resets to default values on every run in the Unity Editor
-
-    Zero Persistence: Changes made during runtime are never saved automatically
-
-    Isolated Modifications: Runtime changes don't affect the original editor-configured values
-
-    Clean State: Every play session starts with fresh, default data
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-Runtime features include:
-
-    Real-time data modification capabilities
-
-    Visual feedback for data changes
-
-    Reset functionality for testing
-
-    Clean display of current runtime values
-
-    Method to reset data when necessary
-    
-    Method to print data (Editor only)
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-### Creating Scriptable Reactive
-
-Scriptable Reactives are observable data containers that automatically notify listeners when their values change, enabling reactive programming patterns throughout on the project.
-
-
-It is possible to create Scriptable Reactives using the asset menu by right-clicking and selecting:
-Create > Scriptables > Reactives
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-The following pre-made types are available:
-
-  - BooleanScriptableReactive
-  - ColorScriptableReactive
-  - DoubleScriptableReactive
-  - FloatScriptableReactive
-  - GameObjectScriptableReactive
-  - IntScriptableReactive
-  - NoParametersScriptableReactive
-  - QuaternionScriptableReactive
-  - StringScriptableReactive
-  - TransformScriptableReactive
-  - Vector2ScriptableReactive
-  - Vector3ScriptableReactive
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-When a instances of these ScriptableObjects is created in the Inspector (Vector2 type):
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
+> Ensure the type is marked `[Serializable]` to appear in the inspector.
 
 <div align="center" style="text-align:center;">
   <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/reactive.png"  width="500" > 
   <br>
 </div>
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-In play mode:
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-<div align="center" style="text-align:center;">
-  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/reactive_play_mode.png"  width="500" > 
-  <br>
-</div>
-
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
-
-  It is possible to extend the ScriptableReactive class to create custom reactive types:
+<br>
 
 ```csharp
-[CreateAssetMenu(fileName = "FooBarScriptableReactive", menuName = "FooBar/Reactive")]
-public class FooBarScriptableReactive : ScriptableReactive<FooBarScriptableReactive>
+public class ScoreController : MonoBehaviour
 {
-    // Methods here if needed
+    [SerializeField]
+    private ScoreReactive scoreReactive;
+
+    private void OnEnable()
+    {
+        scoreReactive.Subscribe(OnScoreChange);
+    }
+
+    private void OnDisable()
+    {
+        scoreReactive.Unsubscribe(OnScoreChange);
+    }
+
+    private void OnScoreChange(Score newScore) { ... }
 }
 ```
 
-> Note: Not all types are serializable by default or will be visible in the editor. Ensure the custom type is marked as [System.Serializable] if it's a custom class.
+To set values and trigger events:
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+```csharp
+scoreReactive.Set(new Score(...))        // Sets and notifies all subscribers
+scoreReactive.SetSilently(new Score(...)) // Sets the value silently — no notification
+scoreReactive.Emit();                     // Emits the current value without changing it
+```
 
-Like ScriptableSettings, Scriptable Reactives handle runtime data intelligently:
+</br>
 
-    Automatic Reset: Runtime values reset to editor-configured defaults on every play session
+### Custom No-Parameter Reactive
 
-    Zero Persistence: Runtime modifications are never automatically saved
+A signal-only reactive that fires an event without passing data:
 
-    Isolated Modifications: Editor values remain untouched during gameplay
+```csharp
+[CreateAssetMenu(fileName = nameof(GameOverSignal), menuName = "MyGame/Signals/" + nameof(GameOverSignal))]
+public class GameOverSignal : NoParamsReactive { }
+```
 
-    Clean State: Each play session starts with fresh, predictable data
+```csharp
+public class GameManager : MonoBehaviour
+{
+    [SerializeField]
+    private GameOverSignal gameOverSignal;
 
-<h5 style="font-size: 1px" align ="center">
-    <br>
-</h5>
+    public void EndGame()
+    {
+        gameOverSignal.Emit();
+    }
+}
+```
 
+```csharp
+public class UIManager : MonoBehaviour
+{
+    [SerializeField]
+    private GameOverSignalReactive gameOverSignalReactive;
 
-Features include:
+    private void OnEnable() 
+    {
+        gameOverSignalReactive.Subscribe(ShowGameOverScreen);
+    }
 
-    Method to reset data (When possible)
-    
-    Method to print data (Editor only)
+    private void OnDisable()
+    {
+        gameOverSignalReactive.Unsubscribe(ShowGameOverScreen);
+    }
 
-    Methods to ensure observability of the data
+    private void ShowGameOverScreen() { ... }
+}
+```
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/no_parm_reactive.png"  width="500" > 
+  <br>
+</div>
+<br>
+
+</br>
+
+### Pre-made Types
+
+Ready-to-use reactive and runtime assets are available via **Create > Scriptables**:
+
+| Reactive | Runtime | Settings |
+|---|---|---|
+| `BooleanReactive` | `BooleanRuntime` | `BooleanSettings` |
+| `ColorReactive` | `ColorRuntime` | `ColorSettings` |
+| `DoubleReactive` | `DoubleRuntime` | `DoubleSettings` |
+| `FloatReactive` | `FloatRuntime` | `FloatSettings` |
+| `GameObjectReactive` | `GameObjectRuntime` | `GameObjectSettings` |
+| `IntReactive` | `IntRuntime` | `IntSettings` |
+| `QuaternionReactive` | `QuaternionRuntime` | `QuaternionSettings` |
+| `StringReactive` | `StringRuntime` | `StringSettings` |
+| `TransformReactive` | `TransformRuntime` | `TransformSettings` |
+| `Vector2Reactive` | `Vector2Runtime` | `Vector2Settings` |
+| `Vector3Reactive` | `Vector3Runtime` | `Vector3Settings` |
+
+</br>
+
+## 📌 Pin Feature
+
+ScriptableObjects are normally unloaded when no scene references point to them. The **pin system** prevents that:
+
+```csharp
+public class GameManager : MonoBehaviour
+{
+    [SerializeField]
+    private PlayerStateRuntime playerStateRuntime;
+
+    private void Awake() => playerStateRuntime.Pin();   // keep alive
+
+    private void OnDestroy() => playerStateRuntime.Unpin(); // release
+}
+```
+
+Pinned objects survive domain reloads and remain functional across play mode transitions. The `ReferenceKeeper` internally uses a `HashSet` and a hidden scene `ScriptableCache` MonoBehaviour.
+
+<div align="center" style="text-align:center;">
+  <img src="https://github.com/thisaislan/just-images/raw/main/images/scriptables/pinneds.png"  width="500" > 
+  <br>
+</div>
+<br>
+
+</br>
+
+## 🧩 Interfaces
+
+All base classes implement standard interfaces so you can code against contracts:
+
+| Interface | Method | Applied To |
+|---|---|---|
+| `ISubscribable<T>` | `Subscribe(Action<T>)` / `Unsubscribe(Action<T>)` | `ScriptableReactive<T>` |
+| `ISubscribable` | `Subscribe(Action)` / `Unsubscribe(Action)` | `NoParamsReactive` |
+| `IEmitable` | `Emit()` | `ScriptableReactive<T>`, `NoParamsReactive` |
+| `ISettable<T>` | `Set(T)` | `ScriptableReactive<T>`, `ScriptableRuntime<T>` |
+| `ISilentSettable<T>` | `SetSilently(T)` | `ScriptableReactive<T>` |
+| `IResettable` | `Reset()` | `ScriptableRuntime<T>`, `ScriptableReactive<T>` |
+| `IInitializable<T>` | `Initialize(T)` | `ScriptableSettings<T>` |
+| `IPinnable` | `Pin()` / `Unpin()` | All base classes |
 
 </br>
 
 ## 📦 Install
 
-1. Copying git url https://github.com/thisaislan/scriptables.git
+1. Copy the git URL: `https://github.com/thisaislan/scriptables.git`
 
-2. Click on `Window/Package Manager` in Unity Editor
+2. In Unity Editor, click **Window > Package Manager**
 
-3. Click on add package button `Add package button`
+3. Click the **+** button and select **Add package from git URL...**
 
-4. Select `Add package from git URL...`
-
-5. Past the url
-
-6. Press `Enter` or clink on the `Add` button
-
-7. Enjoy :satisfied:
+4. Paste the URL and click **Add**
 
 </br>
 

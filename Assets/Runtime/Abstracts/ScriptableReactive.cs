@@ -1,238 +1,232 @@
 using UnityEngine;
 using System;
+using Thisaislan.Scriptables.Interfaces;
+using Thisaislan.Scriptables.Statics;
 
 
 #if UNITY_EDITOR
+using Thisaislan.Scriptables.Editor.Utilities;
 using Thisaislan.Scriptables.Editor.Abstracts;
-using Thisaislan.Scriptables.Editor;
-using UnityEditor;
 #endif
 
 namespace Thisaislan.Scriptables.Abstracts
 {
 #if UNITY_EDITOR
     /// <summary>
-    /// Base class for creating reactive scriptable objects that combine data storage with event notifications.
-    /// Provides editor/runtime value separation and change notification capabilities.
+    /// A ScriptableObject-based reactive data container that stores a value and notifies subscribers when it changes.
     /// </summary>
-    /// <typeparam name="T">The type of value to store and observe</typeparam>
-    /// <remarks>
-    /// In the editor, this class provides enhanced debugging capabilities through ScriptableReactiveEditorDebbugable.
-    /// In builds, it functions as a standard ScriptableObject with reactive event functionality.
-    /// </remarks>
-    public abstract class ScriptableReactive<T> : ScriptableReactiveEditorDebbugable<T>
+    /// <typeparam name="T">The type of data stored and observed by this reactive property</typeparam>
+    public abstract class ScriptableReactive<T> : ReactiveEditorDebuggableScriptable,
+        ISettable<T>, ISilentSettable<T>, IResettable, IEmitable, ISubscribable<T>, IPinnable
 #else
     /// <summary>
-    /// Base class for creating reactive scriptable objects that combine data storage with event notifications.
+    /// A ScriptableObject-based reactive data container that stores a value and notifies subscribers when it changes.
     /// </summary>
-    /// <typeparam name="T">The type of value to store and observe</typeparam>
-    public abstract class ScriptableReactive<T> : ScriptableObject
+    /// <typeparam name="T">The type of data stored and observed by this reactive property</typeparam>
+    public abstract class ScriptableReactive<T> : ScriptableObject,
+        ISettable<T>, ISilentSettable<T>, IResettable, IEmitable, ISubscribable<T>, IPinnable
 #endif
-    {
-        [SerializeField]
-        private Action<T> action;
+    {   
+#if UNITY_EDITOR
+        private const string NoSubscribersEditorMessage = "No subscribers registered for {0}";
+        private const string RuntimeDataTooltip = "Data used only at runtime. It is reset when exiting Play Mode.";
+#endif
+        private Action<T> callbacks;
 
         [SerializeField]
 #if UNITY_EDITOR
-        [Tooltip(EditorConsts.EditorValueTooltip)]
+        [Tooltip(RuntimeDataTooltip)]
 #endif
-        private T editorValue;
-
-#if UNITY_EDITOR
-        [NonSerialized]
-        private T value;
-#endif
+        private T runtimeData;
 
         /// <summary>
-        /// Gets or sets the current value, automatically notifying all observers when changed
+        /// Gets the runtime data. Automatically initializes a new instance if null.
         /// </summary>
-        /// <remarks>
-        /// In the editor:
-        /// - During edit mode: Uses and modifies the serialized editorValue
-        /// - During play mode: Uses and modifies a runtime copy, preserving editorValue
-        /// 
-        /// In builds:
-        /// - Always uses the serialized editorValue
-        /// 
-        /// Setting this property automatically triggers notifications to all registered observers.
-        /// </remarks>
-        public T Value
+        public T Data
         {
             get
             {
-#if UNITY_EDITOR
-                if (Application.isPlaying)
+                if (runtimeData == null)
                 {
-                    if (value == null)
-                    {
-                        ResetToDefaultState();
-                    }
-
-                    return value;
+                    Reset();
                 }
-                else
-                {
-                    return editorValue;
-                }
-#else
-                return editorValue;
-#endif
-            }
-            protected set
-            {
-                SetWithoutNotify(value);
-                Notify();
+                
+                return runtimeData;
             }
         }
 
         /// <summary>
-        /// Set value without notify
+        /// Assigns a new value to the reactive data without triggering the change event.
         /// </summary>
-        /// <param name="value">New value to be set</param>
-        public void SetWithoutNotify(T value)
+        /// <param name="data">The value to set without notifying subscribers</param>
+        public void SetSilently(T data)
         {
 #if UNITY_EDITOR
-                if (Application.isPlaying)
-                {
-                    this.value = value;
-                }
-                else
-                {
-                    editorValue = value;
-                }
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(SetSilently)}", data);
+            }
+#endif
+            runtimeData = data;
+        }
+
+        /// <summary>
+        /// Sets the data and triggers observer notifications.
+        /// </summary>
+        /// <param name="data">New data to set</param>
+        public void Set(T data)
+        {
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Set)}", data);
+            }
+#endif
+            runtimeData = data;
+
+#if UNITY_EDITOR
+            TrackableEmit(false);
 #else
-                editorValue = value;
+            Emit();
+#endif            
+        }
+
+        /// <summary>
+        /// Subscribes a callback to be invoked when the event is triggered.
+        /// </summary>
+        /// <param name="callback">
+        /// The delete (callback) to register. This should be a parameterless void method 
+        /// that will execute when the event is emitted.
+        /// </param>
+        public void Subscribe(Action<T> callback)
+        {
+            callbacks += callback;
+        }
+
+        /// <summary>
+        /// Unregisters a previously subscribed callback from the event notification system.
+        /// </summary>
+        /// <param name="callback">
+        /// The delegate (callback) to remove from the invocation list.
+        /// This should match exactly the method that was originally subscribed.
+        /// </param>
+        public void Unsubscribe(Action<T> callback)
+        {
+            callbacks -= callback;
+        }
+
+        /// <summary>
+        /// Resets the data to a new default instance.
+        /// </summary>
+        public virtual void Reset()
+        {
+            runtimeData = default;
+        }
+
+        /// <summary>
+        /// Triggers the event for the current generic type, notifying all subscribed.
+        /// </summary>
+        public void Emit()
+        {
+#if UNITY_EDITOR
+            TrackableEmit(true);
+#else
+            callbacks?.Invoke(Data);
 #endif
         }
 
         /// <summary>
-        /// Set value with notification
+        /// Keeps the ScriptableObject alive by adding it to the reference list
         /// </summary>
-        /// <param name="value">New value to be set</param>
-        public void SetValue(T value)
-        {
-            Value = value;
-        }
-
-        /// <summary>
-        /// Registers a callback to be invoked when the value changes
-        /// </summary>
-        /// <param name="call">The method to call when the value changes</param>
-        /// <example>
-        /// <code>
-        /// myReactive.AddObserver(OnValueChanged);
-        /// 
-        /// private void OnValueChanged(MyType newValue)
-        /// {
-        ///     Debug.Log($"Value changed to: {newValue}");
-        /// }
-        /// </code>
-        /// </example>
-        public void AddObserver(Action<T> call)
-        {
-            action += call;
-        }
-
-        /// <summary>
-        /// Unregisters a callback from value change notifications
-        /// </summary>
-        /// <param name="call">The method to remove from notifications</param>
-        public void RemoveObserver(Action<T> call)
-        {
-            action -= call;
-        }
-
-        /// <summary>
-        /// Notifies all registered observers with the specified value
-        /// </summary>
-        /// <param name="value">The value to send to all observers</param>
-        /// <remarks>
-        /// This method is automatically called when the Value property is set.
-        /// It can also be called manually to trigger notifications without changing the stored value.
-        /// </remarks>
-        public void Notify()
+        public void Pin()
         {
 #if UNITY_EDITOR
-            if (action == null || action?.GetInvocationList().Length == 0)
+            if (trackActivity)
             {
-                Debug.LogWarning(string.Format(RuntimeConsts.NoListenersEditorMessage, name));
+                Printer.PrintData($"{name} - {nameof(Pin)}", runtimeData);
+            }
+#endif
+            ReferenceKeeper.Keep(this);
+        }
+        
+        /// <summary>
+        /// Releases the ScriptableObject by removing it from the reference list
+        /// </summary>
+        public void Unpin()
+        {
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Unpin)}", runtimeData);
+            }
+#endif
+            ReferenceKeeper.Unkeep(this);
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Resets runtime data to a copy of the current editor data.
+        /// Called when entering play mode or when explicitly resetting.
+        /// </summary>
+        internal override void ResetRuntimeDataEditorOnly()
+        {
+            runtimeData = default;
+        }
+
+        /// <summary>
+        /// Gets the current runtime data for editor display.
+        /// </summary>
+        internal override object GetRuntimeDataEditorOnly()
+        {
+            if (runtimeData == null)
+            {
+                ResetRuntimeDataEditorOnly();
+            }
+
+            return runtimeData;
+        }
+
+        /// <summary>
+        /// Sets the runtime data for editor manipulation.
+        /// </summary>
+        internal override void SetRuntimeDataEditorOnly(object data)
+        {
+            runtimeData = (T)data;
+        }
+
+        /// <summary>
+        /// Triggers a notification to all subscribers with the current runtime data.
+        /// </summary>
+        internal override void EmitEditorOnly()
+        {
+            TrackableEmit(false);
+        }
+
+        /// <summary>
+        /// Cleans the object's runtime data to its default state.
+        /// </summary>
+        internal override void ClearRuntimeDataEditorOnly()
+        {
+            runtimeData = default;
+        }
+
+        private void TrackableEmit(bool checkTracking)
+        {
+            if (checkTracking)
+            {
+                if (trackActivity)
+                {
+                    Printer.PrintData($"{name} - {nameof(Emit)}", Data);
+                }
+            }
+
+            if (callbacks == null)
+            {
+                Printer.PrintWarning(string.Format(NoSubscribersEditorMessage, name));
                 return;
             }
-#endif
-            action?.Invoke(Value);
-        }
 
-#if UNITY_EDITOR
-        /// <summary>
-        /// Resets the runtime value to match the current editor value
-        /// </summary>
-        /// <remarks>
-        /// This method is called automatically when entering play mode to ensure
-        /// runtime data starts with a fresh copy of editor data.
-        /// </remarks>
-        internal override void ResetToDefaultState()
-        {
-            if (editorValue != null)
-            {
-                value = CreateCopy(editorValue);
-            }
-            else
-            {
-                value = default;
-            }
-        }
-
-        /// <summary>
-        /// Gets the current runtime value for editor display purposes
-        /// </summary>
-        /// <returns>The runtime value instance</returns>
-        /// <remarks>
-        /// If the runtime value hasn't been initialized, this method will create
-        /// a copy of the editor value before returning.
-        /// </remarks>
-        internal override object GetRuntimeValue()
-        {
-            if (value == null)
-            {
-                ResetToDefaultState();
-            }
-
-            return value;
-        }
-
-        /// <summary>
-        /// Gets the current editor value for editor display purposes
-        /// </summary>
-        /// <returns>The editor value instance</returns>
-        internal override object GetEditorValue()
-        {
-            return editorValue;
-        }
-
-        /// <summary>
-        /// Sets the runtime value for editor manipulation
-        /// </summary>
-        /// <param name="value">The new runtime value</param>
-        internal override void SetRuntimeValue(object value)
-        {
-            this.value = (T)value;
-        }
-
-        /// <summary>
-        /// Sets the editor value for editor manipulation
-        /// </summary>
-        /// <param name="value">The new editor value</param>
-        internal override void SetEditorValue(object value)
-        {
-            editorValue = (T)value;
-        }
-
-        /// <summary>
-        /// Used to call Notify method using the runtime value
-        /// </summary>
-        internal override void NotifyValue()
-        {
-            Notify();
+            callbacks?.Invoke(Data);
         }
 #endif
     }

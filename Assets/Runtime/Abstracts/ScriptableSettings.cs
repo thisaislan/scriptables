@@ -1,65 +1,51 @@
-using Thisaislan.Scriptables.Interfaces;
 using UnityEngine;
+using Thisaislan.Scriptables.Interfaces;
+using Thisaislan.Scriptables.Statics;
+
 
 #if UNITY_EDITOR
-using System.Reflection;
-using Thisaislan.Scriptables.Editor;
-using Thisaislan.Scriptables.Editor.Abstracts;
-using System;
+using Thisaislan.Scriptables.Editor.Abstracts.Bases;
+using Thisaislan.Scriptables.Editor.Utilities;
 #endif
 
 namespace Thisaislan.Scriptables.Abstracts
 {
 #if UNITY_EDITOR
     /// <summary>
-    /// Base class for ScriptableObject-based settings that supports both editor and runtime data management.
-    /// In the Unity Editor, this class provides enhanced debugging capabilities through ScriptableEditorDebbugable.
+    /// Base class for ScriptableObject-based dictionary containers with runtime persistence and editor debugging support.
     /// </summary>
-    /// <typeparam name="T">The type of data container (must inherit from Data)</typeparam>
-    /// <remarks>
-    /// This implementation provides:
-    /// - Separate editor and runtime data instances
-    /// - Automatic data copying from editor to runtime when entering play mode
-    /// - Custom inspector support for enhanced debugging
-    /// - Data initialization capabilities through IDataInitializable
-    /// - Editor-only features for development and testing
-    /// </remarks>
-    public abstract class ScriptableSettings<T> : ScriptableEditorDebbugable, IDataInitializable where T : Data
+    /// <typeparam name="T">The value type stored in the dictionary, where string is used as the key</typeparam>
+    public abstract class ScriptableSettings<T> : SettingsEditorDebuggableScriptable,
+        IInitializable<T>, IPinnable
 #else
     /// <summary>
-    /// Base class for ScriptableObject-based settings for runtime builds.
-    /// In builds, this uses the standard ScriptableObject without editor-specific features.
+    /// Base class for ScriptableObject-based dictionary containers with runtime persistence and editor debugging support.
     /// </summary>
-    /// <typeparam name="T">The type of data container (must inherit from Data)</typeparam>
-    /// <remarks>
-    /// This lightweight implementation provides runtime-only functionality
-    /// without the overhead of editor-specific features.
-    /// </remarks>
-    public abstract class ScriptableSettings<T> : ScriptableObject, IDataInitializable where T : Data
+    /// <typeparam name="T">The value type stored in the dictionary, where string is used as the key</typeparam>
+    public abstract class ScriptableSettings<T> : ScriptableObject,
+        IInitializable<T>, IPinnable
 #endif
     {
+#if UNITY_EDITOR
+        private const string EditorDataTooltip = "Default data used when no external source has initialized it.";
+        private const string RuntimeDataTooltip = "Data used only in Play Mode within the Unity Editor. Reset when Play Mode ends.";
+#endif
+
         [SerializeField]
 #if UNITY_EDITOR
-        [Tooltip(EditorConsts.EditorDataTooltip)]
+        [Tooltip(EditorDataTooltip)]
 #endif
-        private T editorData; // Serialized editor data that persists between sessions
+        private T data;
 
 #if UNITY_EDITOR
-        [NonSerialized]
-        private T data; // Runtime instance of the data used during play mode
-#endif        
+        [SerializeField]
+        [Tooltip(RuntimeDataTooltip)]
+        private T runtimeData;
+#endif
 
         /// <summary>
-        /// Public accessor for the settings data with proper editor/runtime separation
+        /// Gets the settings data with proper editor/runtime separation.
         /// </summary>
-        /// <remarks>
-        /// In the editor:
-        /// - During edit mode: Returns the serialized editorData
-        /// - During play mode: Returns a runtime copy of editorData
-        /// 
-        /// In builds:
-        /// - Always returns the serialized editorData
-        /// </remarks>
         public T Data
         {
             get
@@ -67,76 +53,103 @@ namespace Thisaislan.Scriptables.Abstracts
 #if UNITY_EDITOR
                 if (Application.isPlaying)
                 {
-                    // Use runtime data during play mode for isolation from editor changes
-                    if (data == null)
+                    if (runtimeData == null)
                     {
-                        ResetToDefaultState();
+                        ResetRuntimeDataEditorOnly();
                     }
+                    return runtimeData;
+                }
 
-                    return data;
-                }
-                else
-                {
-                    // Use editor data during edit mode for direct editing
-                    return editorData;
-                }
+                return data;
 #else
-                // In builds, always use editor data (no runtime/editor separation needed)
-                return editorData;
+                return data;
 #endif
-            }
-            protected set
-            {
-                InitializeData(value);
             }
         }
 
         /// <summary>
-        /// Initializes the settings data with a new Data instance
+        /// Initializes the settings data with a new Data instance.
         /// </summary>
-        /// <param name="data">The data to initialize with (must be of type T)</param>
-        /// <remarks>
-        /// This method is part of the IDataInitializable interface and allows
-        /// external systems to set the data for this ScriptableSettings instance.
-        /// </remarks>
-        public virtual void InitializeData(Data data)
+        /// <param name="data">The data to initialize with</param>
+        public virtual void Initialize(T data)
         {
 #if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Initialize)}", data);
+            }
+
             if (Application.isPlaying)
             {
-                // Only set runtime data during play mode to maintain separation
-                this.data = data as T;
+                runtimeData = data;
             }
             else
             {
-                // Set editor data during edit mode for persistence
-                editorData = data as T;
+                this.data = data;
             }
 #else
-                // In builds, set editor data directly
-                editorData = data as T;
+            this.data = (T)data;
 #endif
+        }
+        
+        /// <summary>
+        /// Keeps the ScriptableObject alive by adding it to the reference list
+        /// </summary>
+        public void Pin()
+        {
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Pin)}", runtimeData);
+            }
+#endif
+            ReferenceKeeper.Keep(this);
+        }
+        
+        /// <summary>
+        /// Releases the ScriptableObject by removing it from the reference list
+        /// </summary>
+        public void Unpin()
+        {
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Unpin)}", runtimeData);
+            }
+#endif
+            ReferenceKeeper.Unkeep(this);
         }
 
 #if UNITY_EDITOR
-
-        internal override void SetData(Data data)
+        internal override void SetRuntimeDataEditorOnly(object data)
         {
-            this.data = (T)data;
+            runtimeData = (T)data;
         }
+
         /// <summary>
-        /// Resets the runtime data to match the current editor data
+        /// Resets runtime data to a copy of the current editor data.
+        /// Called when entering play mode or when explicitly resetting.
         /// </summary>
-        /// <remarks>
-        /// This is called when entering play mode or when explicitly resetting
-        /// to ensure runtime data starts with a fresh copy of editor data
-        /// </remarks>
-        internal override void ResetToDefaultState()
+        internal override void ResetRuntimeDataEditorOnly()
         {
-            // For ScriptableSettings, we want to clone the editor data for runtime
-            if (editorData != null)
+            if (data != null)
             {
-                data = CreateCopy(editorData);
+                runtimeData = CreateCopy(data);
+            }
+            else
+            {
+                runtimeData = default;
+            }
+        }
+
+        /// <summary>
+        /// Resets the object's data to its default state.
+        /// </summary>
+        internal override void ResetDataEditorOnly()
+        {
+            if (runtimeData != null)
+            {
+                data = CreateCopy(runtimeData);
             }
             else
             {
@@ -145,139 +158,33 @@ namespace Thisaislan.Scriptables.Abstracts
         }
 
         /// <summary>
-        /// Gets the appropriate data instance based on the current mode
+        /// Gets the appropriate data instance based on current mode.
+        /// Returns runtime data during play mode, editor data during edit mode.
         /// </summary>
-        /// <returns>
-        /// - During play mode: The runtime data instance
-        /// - During edit mode: The editor data instance
-        /// </returns>
-        /// <remarks>
-        /// Used by the custom editor to display the correct data in the inspector
-        /// </remarks>
-        internal override object GetData()
-        {
-            if (Application.isPlaying)
-            {
-                if (data == null)
-                {
-                    ResetToDefaultState();
-                }
-
-                return data;
-            }
-            else
-            {
-                return editorData;
-            }
+        internal override object GetDataEditorOnly()
+        {            
+            return data;
         }
 
         /// <summary>
-        /// Returns the type of ScriptableEditorDebbugable for editor categorization
+        /// Gets the current runtime data instance for editor display.
         /// </summary>
-        /// <returns>ScriptableEditorDebbugableType.Settings to indicate this is a settings object</returns>
-        /// <remarks>
-        /// Used by the custom editor to determine how to display and handle this object
-        /// </remarks>
-        internal override ScriptableEditorDebbugableType GetScriptableEditorDebbugableType()
+        internal override object GetRuntimeDataEditorOnly()
         {
-            return ScriptableEditorDebbugableType.Settings;
+            if (runtimeData == null)
+            {
+                ResetRuntimeDataEditorOnly();
+            }
+
+            return runtimeData;
         }
 
         /// <summary>
-        /// Gets the type of the value for editor display purposes
+        /// Cleans the object's runtime data to its default state.
         /// </summary>
-        internal override Type GetValueType()
+        internal override void ClearRuntimeDataEditorOnly()
         {
-            return GetType();
-        }
-
-        /// <summary>
-        /// Creates a deep copy of a Data object using reflection
-        /// </summary>
-        /// <typeparam name="T">The type of Data object to copy</typeparam>
-        /// <param name="original">The original object to copy</param>
-        /// <returns>A new instance of T with copied field and property values</returns>
-        /// <remarks>
-        /// This method:
-        /// - Creates a new instance using the default constructor
-        /// - Copies all field and property values from the original
-        /// - Handles null originals by creating a default instance
-        /// - Uses CopyObjectData to perform the actual copying
-        /// </remarks>
-        private T CreateCopy(T original)
-        {
-            try
-            {
-                // Handle null original by creating a default instance
-                if (original == null) return (T)Activator.CreateInstance(typeof(T));
-
-                // Create new instance and copy data from original
-                T copy = (T)Activator.CreateInstance(typeof(T));
-                CopyObjectData(original, copy);
-                return copy;
-            }
-            catch
-            {
-                return default;
-            }
-        }
-        
-        /// <summary>
-        /// Copies all field and property values from source object to destination object
-        /// </summary>
-        /// <param name="source">The source object to copy data from</param>
-        /// <param name="destination">The destination object to copy data to</param>
-        /// <remarks>
-        /// This method performs a shallow copy of all public instance fields and properties.
-        /// Only copies data if both objects are non-null and of the same type.
-        /// Includes error handling to prevent failures from individual field/property access issues.
-        /// </remarks>
-        private void CopyObjectData(object source, object destination)
-        {
-            // Early return for null objects to prevent exceptions
-            if (source == null || destination == null)
-                return;
-
-            Type sourceType = source.GetType();
-            Type destinationType = destination.GetType();
-
-            // Only copy if types match to ensure type safety
-            if (sourceType != destinationType)
-                return;
-
-            // Copy all public instance fields
-            FieldInfo[] fields = sourceType.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            foreach (FieldInfo field in fields)
-            {
-                try
-                {
-                    object value = field.GetValue(source);
-                    field.SetValue(destination, value);
-                }
-                catch
-                {
-                    // Log warning but continue with other fields
-                }
-            }
-
-            // Copy all public instance properties with both get and set access
-            PropertyInfo[] properties = sourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo property in properties)
-            {
-                // Only copy properties that can be both read and written
-                if (property.CanRead && property.CanWrite)
-                {
-                    try
-                    {
-                        object value = property.GetValue(source);
-                        property.SetValue(destination, value);
-                    }
-                    catch
-                    {
-                        // Log warning but continue with other properties
-                    }
-                }
-            }
+            runtimeData = default;
         }
 #endif
     }

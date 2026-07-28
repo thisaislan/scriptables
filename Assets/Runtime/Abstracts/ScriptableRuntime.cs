@@ -1,148 +1,147 @@
+using UnityEngine;
 using Thisaislan.Scriptables.Interfaces;
-using System;
+using Thisaislan.Scriptables.Statics;
+
 
 #if UNITY_EDITOR
-using Thisaislan.Scriptables.Editor.Abstracts;
-#else
-using UnityEngine;
+using Thisaislan.Scriptables.Editor.Abstracts.Bases;
+using Thisaislan.Scriptables.Editor.Utilities;
 #endif
 
 namespace Thisaislan.Scriptables.Abstracts
 {
 #if UNITY_EDITOR
     /// <summary>
-    /// Base class for ScriptableObject-based runtime data containers with editor debugging support.
-    /// In the Unity Editor, this class provides enhanced debugging capabilities through ScriptableEditorDebbugable.
+    /// Base class for ScriptableObject-based data containers with runtime persistence.
     /// </summary>
-    /// <typeparam name="T">The type of data container (must inherit from Data)</typeparam>
-    /// <remarks>
-    /// This implementation provides:
-    /// - Runtime data management with reset capabilities
-    /// - Custom inspector support for enhanced debugging
-    /// - Data reset functionality through IDataResettable
-    /// - Editor-time visualization of runtime data structure
-    /// - Automatic data initialization on access
-    /// </remarks>
-    public abstract class ScriptableRuntime<T> : ScriptableEditorDebbugable, IDataResettable where T : Data
+    /// <typeparam name="T">The type of data managed by this container</typeparam>
+    public abstract class ScriptableRuntime<T> : RuntimeEditorDebuggableScriptable,
+        ISettable<T>, IResettable, IPinnable
 #else
     /// <summary>
-    /// Base class for ScriptableObject-based runtime data containers for builds.
-    /// In builds, this uses the standard ScriptableObject without editor-specific features.
+    /// Base class for ScriptableObject-based data containers with runtime persistence.
     /// </summary>
-    /// <typeparam name="T">The type of data container (must inherit from Data)</typeparam>
-    /// <remarks>
-    /// This lightweight implementation provides runtime-only functionality
-    /// with automatic data initialization and reset capabilities.
-    /// </remarks>
-    public abstract class ScriptableRuntime<T> : ScriptableObject, IDataResettable where T : Data
+    /// <typeparam name="T">The type of data managed by this container</typeparam>
+    public abstract class ScriptableRuntime<T> : ScriptableObject,
+        ISettable<T>, IResettable, IPinnable
 #endif
     {
-        [NonSerialized] // Runtime data is not serialized to prevent persistence between sessions
-        private T data; // Instance of the runtime data
+#if UNITY_EDITOR
+        private const string RuntimeDataTooltip = "Data used only at runtime. It is reset when exiting Play Mode.";
+#endif 
+        [SerializeField]
+#if UNITY_EDITOR
+        [Tooltip(RuntimeDataTooltip)]
+#endif
+        private T runtimeData;
 
         /// <summary>
-        /// Public accessor for the runtime data with automatic initialization
+        /// Gets the runtime data. Automatically initializes a new instance if null.
         /// </summary>
-        /// <remarks>
-        /// The data is automatically initialized to a default instance when first accessed
-        /// if it hasn't been set already. This ensures the data is always available.
-        /// </remarks>
         public T Data
         {
             get
             {
-                // Initialize data if it hasn't been set yet (lazy initialization)
-                if (data == null)
+                if (runtimeData == null)
                 {
-                    ResetData();
+                    Reset();
                 }
-
-                return data;
-            }
-
-            /// <summary>
-            /// Protected setter for the runtime data
-            /// </summary>
-            /// <remarks>
-            /// Allows derived classes to set the data while preventing external modification
-            /// </remarks>
-            protected set
-            {
-                data = value;
+                
+                return runtimeData;
             }
         }
 
         /// <summary>
-        /// Resets the runtime data to a new default instance
+        /// Sets the data.
         /// </summary>
-        /// <remarks>
-        /// This method is part of the IDataResettable interface and provides
-        /// a way to reset the data to its initial state. Uses Activator.CreateInstance
-        /// to create a new instance of the data type T.
-        /// </remarks>
-        public virtual void ResetData()
+        /// <param name="data">New data to set</param>
+        public void Set(T data)
         {
-            Data = (T)Activator.CreateInstance(typeof(T));
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Set)}", data);
+            }
+#endif
+            runtimeData = data;
+        }
+
+        /// <summary>
+        /// Resets the runtime data to a new default instance.
+        /// </summary>
+        public virtual void Reset()
+        {
+            runtimeData = default;
+
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Reset)}", runtimeData);
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Keeps the ScriptableObject alive by adding it to the reference list
+        /// </summary>
+        public void Pin()
+        {
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Pin)}", runtimeData);
+            }
+#endif
+            ReferenceKeeper.Keep(this);
+        }
+        
+        /// <summary>
+        /// Releases the ScriptableObject by removing it from the reference list
+        /// </summary>
+        public void Unpin()
+        {
+#if UNITY_EDITOR
+            if (trackActivity)
+            {
+                Printer.PrintData($"{name} - {nameof(Unpin)}", runtimeData);
+            }
+#endif
+            ReferenceKeeper.Unkeep(this);
         }
 
 #if UNITY_EDITOR
-
-        internal override void SetData(Data data)
+        internal override void SetRuntimeDataEditorOnly(object data)
         {
-            this.data = (T)data;
-        }
-
-
-        /// <summary>
-        /// Resets the runtime data to its default state
-        /// </summary>
-        /// <remarks>
-        /// This implementation calls ResetData() to create a new instance of the data.
-        /// Used by the custom editor system to provide reset functionality.
-        /// </remarks>
-        internal override void ResetToDefaultState()
-        {
-            // For ScriptableRuntime, we want to reset the data to a fresh instance
-            ResetData();
+            runtimeData = (T)data;
         }
 
         /// <summary>
-        /// Gets the current runtime data instance for editor inspection
+        /// Resets the runtime data to its default state. Called by custom editor system.
         /// </summary>
-        /// <returns>The current runtime data instance</returns>
-        /// <remarks>
-        /// Used by the custom editor to display the runtime data in the inspector.
-        /// Returns the actual runtime data instance for debugging purposes.
-        /// </remarks>
-        internal override object GetData()
+        internal override void ResetRuntimeDataEditorOnly()
         {
-            if (data == null)
+            Reset();
+        }
+
+        /// <summary>
+        /// Gets the current runtime value for editor display purposes.
+        /// </summary>
+        internal override object GetRuntimeDataEditorOnly()
+        {
+            if (runtimeData == null)
             {
-                ResetToDefaultState();
+                ResetRuntimeDataEditorOnly();
             }
 
-            return data;
+            return runtimeData;
         }
 
         /// <summary>
-        /// Returns the type of ScriptableEditorDebbugable for editor categorization
+        /// Cleans the object's runtime data to its default state.
         /// </summary>
-        /// <returns>ScriptableEditorDebbugableType.Settings to indicate this is a settings-like object</returns>
-        /// <remarks>
-        /// Used by the custom editor to determine how to display and handle this object.
-        /// Although this is runtime data, it's categorized as Settings for consistent editor treatment.
-        /// </remarks>
-        internal override ScriptableEditorDebbugableType GetScriptableEditorDebbugableType()
+        internal override void ClearRuntimeDataEditorOnly()
         {
-            return ScriptableEditorDebbugableType.Runtime;
-        }
-
-        /// <summary>
-        /// Gets the type of the value for editor display purposes
-        /// </summary>
-        internal override Type GetValueType()
-        {
-            return GetType();
+            runtimeData = default;
         }
 #endif
     }
